@@ -88,6 +88,15 @@ const DOCUMENT_PRESETS = [
   { value: "other", label: "Autre justificatif" },
 ] as const;
 
+const profileActionButtonClass =
+  "h-auto min-h-9 w-full max-w-full shrink gap-2 whitespace-normal rounded-full py-2 text-left sm:w-auto sm:whitespace-nowrap";
+
+const profileActionButtonRowClass =
+  "flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap";
+
+const profileGhostActionButtonClass =
+  "h-auto min-h-7 w-full max-w-full shrink whitespace-normal rounded-full text-left sm:w-auto sm:whitespace-nowrap";
+
 export function StudentProfileClient({ studentId }: { studentId: string }) {
   const router = useRouter();
   const { user } = useAuth();
@@ -841,7 +850,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
               (convocation, documents manquants, confirmation de présence).
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6 pt-6">
+          <CardContent className="min-w-0 space-y-6 pt-6">
             {followUp ? (
               <ul className="space-y-2">
                 {followUp.items.map((item) => (
@@ -884,12 +893,12 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
               </ul>
             ) : null}
 
-            <div className="flex flex-wrap gap-3">
+            <div className={profileActionButtonRowClass}>
               {!student.linkedConventionStudentId ? (
                 <Button
                   type="button"
                   variant="outline"
-                  className="gap-2 rounded-full"
+                  className={profileActionButtonClass}
                   onClick={() => triggerProfilePrint("convention")}
                 >
                   <FileText className="size-4" />
@@ -899,7 +908,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
                 <Button
                   type="button"
                   variant="outline"
-                  className="gap-2 rounded-full"
+                  className={profileActionButtonClass}
                   onClick={() => triggerProfilePrint("convention")}
                 >
                   <Printer className="size-4" />
@@ -913,7 +922,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
                     ? "secondary"
                     : "outline"
                 }
-                className="gap-2 rounded-full"
+                className={profileActionButtonClass}
                 disabled={Boolean(student.linkedConventionStudentId)}
                 onClick={toggleConventionSigned}
               >
@@ -933,7 +942,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
                       ? "secondary"
                       : "outline"
                   }
-                  className="gap-2 rounded-full"
+                  className={profileActionButtonClass}
                   onClick={togglePresenceConfirmed}
                 >
                   <CheckCircle2 className="size-4" />
@@ -1023,13 +1032,13 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
               </div>
             ) : null}
 
-            <div className="space-y-4 rounded-xl border border-border/70 bg-background/50 p-4 dark:border-white/10">
+            <div className="min-w-0 space-y-4 rounded-xl border border-border/70 bg-background/50 p-4 dark:border-white/10">
               <p className="font-heading text-sm font-semibold">Relances e-mail</p>
-              <div className="flex flex-wrap gap-3">
+              <div className={profileActionButtonRowClass}>
                 <Button
                   type="button"
                   variant="outline"
-                  className="gap-2 rounded-full"
+                  className={profileActionButtonClass}
                   disabled={
                     sendingReminder === "convention" ||
                     isConventionSigned(student, state.students) ||
@@ -1045,7 +1054,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
                 <Button
                   type="button"
                   variant="outline"
-                  className="gap-2 rounded-full"
+                  className={profileActionButtonClass}
                   disabled={
                     sendingReminder === "convention_candidate" ||
                     !student.email?.trim()
@@ -1060,7 +1069,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
                 <Button
                   type="button"
                   variant="outline"
-                  className="gap-2 rounded-full"
+                  className={profileActionButtonClass}
                   disabled={
                     sendingReminder === "documents" ||
                     !getDocumentsReminderRecipient(student)
@@ -1075,7 +1084,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
                 <Button
                   type="button"
                   variant="outline"
-                  className="gap-2 rounded-full"
+                  className={profileActionButtonClass}
                   disabled={
                     sendingReminder === "presence" || !followUp?.upcomingSession
                   }
@@ -1089,7 +1098,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
                 <Button
                   type="button"
                   variant="outline"
-                  className="gap-2 rounded-full"
+                  className={profileActionButtonClass}
                   disabled={
                     sendingReminder === "convocation" ||
                     !followUp?.upcomingSession ||
@@ -1109,12 +1118,12 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
                 candidat, le document s&apos;imprime aussi pour l&apos;ajouter en
                 pièce jointe. Vous pouvez aussi copier le texte ci-dessous.
               </p>
-              <div className="flex flex-wrap gap-2">
+              <div className={profileActionButtonRowClass}>
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="rounded-full"
+                  className={profileGhostActionButtonClass}
                   onClick={() => copyReminderText("convention")}
                 >
                   Copier texte convention
@@ -1123,7 +1132,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="rounded-full"
+                  className={profileGhostActionButtonClass}
                   onClick={() => copyReminderText("convention_candidate")}
                 >
                   Copier texte convention candidat
@@ -1132,7 +1141,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="rounded-full"
+                  className={profileGhostActionButtonClass}
                   onClick={() => copyReminderText("documents")}
                 >
                   Copier texte documents
@@ -1143,7 +1152,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="rounded-full"
+                      className={profileGhostActionButtonClass}
                       onClick={() => copyReminderText("convocation")}
                     >
                       Copier texte convocation
@@ -1152,7 +1161,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="rounded-full"
+                      className={profileGhostActionButtonClass}
                       onClick={() => copyReminderText("presence")}
                     >
                       Copier texte présence
