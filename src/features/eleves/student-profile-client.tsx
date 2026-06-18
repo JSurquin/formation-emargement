@@ -129,9 +129,12 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
   const [docKind, setDocKind] =
     React.useState<(typeof DOCUMENT_PRESETS)[number]["value"]>("identity");
   const [docLabel, setDocLabel] = React.useState("");
+  const lastLoadedStudentIdRef = React.useRef<string | null>(null);
 
   React.useEffect(() => {
-    if (!student) return;
+    if (!hydrated || !student) return;
+    if (lastLoadedStudentIdRef.current === studentId) return;
+    lastLoadedStudentIdRef.current = studentId;
     setFirstName(student.firstName);
     setLastName(student.lastName);
     setEmail(student.email ?? "");
@@ -151,7 +154,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
     );
     setFunderEmail(student.funderEmail ?? "");
     setSelectedFunderId("manual");
-  }, [student]);
+  }, [studentId, hydrated, student]);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -778,7 +781,10 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
               <Input
                 id="profile-funder-name"
                 value={funderName}
-                onChange={(e) => setFunderName(e.target.value)}
+                onChange={(e) => {
+                  setSelectedFunderId("manual");
+                  setFunderName(e.target.value);
+                }}
                 placeholder="ex. OPCO Atlas, Entreprise XYZ"
                 className="bg-background/80"
               />

@@ -22,10 +22,24 @@ function isStudent(x: unknown): boolean {
   ) {
     return false;
   }
-  if (x.email !== undefined && typeof x.email !== "string") return false;
-  if (x.phone !== undefined && typeof x.phone !== "string") return false;
-  if (x.company !== undefined && typeof x.company !== "string") return false;
-  return true;
+  const optionalString = (value: unknown) =>
+    value === undefined || value === null || typeof value === "string";
+  return (
+    optionalString(x.email) &&
+    optionalString(x.phone) &&
+    optionalString(x.company) &&
+    optionalString(x.socialSecurityNumber) &&
+    optionalString(x.dateOfBirth) &&
+    optionalString(x.franceTravailId) &&
+    optionalString(x.fundingMethod) &&
+    optionalString(x.funderName) &&
+    optionalString(x.funderSiret) &&
+    optionalString(x.funderEmail) &&
+    optionalString(x.conventionSignedAt) &&
+    optionalString(x.conventionCreatedAt) &&
+    optionalString(x.linkedConventionStudentId) &&
+    optionalString(x.presenceConfirmedForSessionId)
+  );
 }
 
 function isAttendanceSlot(x: unknown): boolean {
