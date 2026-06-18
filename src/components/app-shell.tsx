@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   BarChart3,
+  CalendarDays,
   FileText,
   GraduationCap,
   LayoutDashboard,
@@ -67,6 +68,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const navItems = [
     ...nav,
+    ...(user?.role === "FORMATEUR"
+      ? [{ href: "/planning", label: "Planning", icon: CalendarDays }]
+      : []),
     ...(user?.role === "SUPER_ADMIN"
       ? [{ href: "/admin", label: "Admin", icon: Shield }]
       : []),
