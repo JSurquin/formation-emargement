@@ -68,6 +68,7 @@ import {
 } from "@/components/student-profile-print";
 
 import { formatSiret } from "@/lib/convention-print";
+import type { Funder } from "@/lib/funder";
 import type { StudentDocument } from "@/lib/types";
 
 const DOCUMENT_PRESETS = [
@@ -95,6 +96,8 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
   const [funderName, setFunderName] = React.useState("");
   const [funderSiret, setFunderSiret] = React.useState("");
   const [funderEmail, setFunderEmail] = React.useState("");
+  const [savedFunders, setSavedFunders] = React.useState<Funder[]>([]);
+  const [selectedFunderId, setSelectedFunderId] = React.useState("manual");
   const [sendingReminder, setSendingReminder] =
     React.useState<ReminderKind | null>(null);
   const [docKind, setDocKind] =
@@ -119,7 +122,37 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
       student.funderSiret ? formatSiret(student.funderSiret) : "",
     );
     setFunderEmail(student.funderEmail ?? "");
+    setSelectedFunderId("manual");
   }, [student]);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch("/api/funders");
+        const data = await res.json();
+        if (!cancelled && res.ok) {
+          setSavedFunders(data.funders ?? []);
+        }
+      } catch {
+        /* liste optionnelle */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const applySavedFunder = (funderId: string | null) => {
+    if (!funderId) return;
+    setSelectedFunderId(funderId);
+    if (funderId === "manual") return;
+    const funder = savedFunders.find((f) => f.id === funderId);
+    if (!funder) return;
+    setFunderName(funder.name);
+    setFunderSiret(funder.siret ? formatSiret(funder.siret) : "");
+    setFunderEmail(funder.email ?? "");
+  };
 
   React.useEffect(() => {
     if (!profilePrintMode) return;
@@ -525,6 +558,31 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
                 </SelectContent>
               </Select>
             </div>
+            {savedFunders.length > 0 ? (
+              <div className="grid gap-2 sm:col-span-2">
+                <Label htmlFor="profile-funder-preset">Financeur enregistré</Label>
+                <Select value={selectedFunderId} onValueChange={applySavedFunder}>
+                  <SelectTrigger
+                    id="profile-funder-preset"
+                    className="bg-background/80"
+                  >
+                    <SelectValue placeholder="Choisir un financeur enregistré" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="manual">Saisie manuelle</SelectItem>
+                    {savedFunders.map((f) => (
+                      <SelectItem key={f.id} value={f.id}>
+                        {f.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Choisissez un financeur déjà enregistré dans l&apos;administration
+                  pour remplir automatiquement nom, SIRET et e-mail.
+                </p>
+              </div>
+            ) : null}
             <div className="grid gap-2 sm:col-span-2">
               <Label htmlFor="profile-funder-name">Nom du financeur</Label>
               <Input
