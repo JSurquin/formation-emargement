@@ -1,7 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { Building2, Pencil, Trash2, UserPlus } from "lucide-react";
+import {
+  Building2,
+  CalendarDays,
+  Pencil,
+  Trash2,
+  UserPlus,
+} from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -21,10 +27,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFormation } from "@/components/providers/formation-provider";
 import { AdminAccountingSection } from "@/features/admin/accounting-section";
 import { formatSiret } from "@/lib/convention-print";
 import type { Funder } from "@/lib/funder";
+
+type AdminTab = "comptabilite" | "formateurs" | "financeurs" | "sessions";
 
 type Trainer = {
   id: string;
@@ -39,6 +48,7 @@ function trainerDisplayName(trainer: Trainer): string {
 
 export default function AdminPage() {
   const { state, hydrated, updateSession } = useFormation();
+  const [tab, setTab] = React.useState<AdminTab>("comptabilite");
   const [trainers, setTrainers] = React.useState<Trainer[]>([]);
   const [loadingTrainers, setLoadingTrainers] = React.useState(true);
   const [creating, setCreating] = React.useState(false);
@@ -286,9 +296,43 @@ export default function AdminPage() {
         description="Gérez la comptabilité, les formateurs, les financeurs et assignez les sessions de formation."
       />
 
-      <AdminAccountingSection />
+      <Tabs
+        value={tab}
+        onValueChange={(value) => setTab(value as AdminTab)}
+      >
+        <TabsList className="mb-6 flex h-auto w-full flex-wrap justify-start gap-1 rounded-xl border border-border/60 bg-muted/40 p-1 dark:border-white/10">
+          <TabsTrigger
+            value="comptabilite"
+            className="gap-2 rounded-lg px-3 py-2 text-xs sm:text-sm"
+          >
+            Comptabilité
+          </TabsTrigger>
+          <TabsTrigger
+            value="formateurs"
+            className="gap-2 rounded-lg px-3 py-2 text-xs sm:text-sm"
+          >
+            Formateurs
+          </TabsTrigger>
+          <TabsTrigger
+            value="financeurs"
+            className="gap-2 rounded-lg px-3 py-2 text-xs sm:text-sm"
+          >
+            Financeurs
+          </TabsTrigger>
+          <TabsTrigger
+            value="sessions"
+            className="gap-2 rounded-lg px-3 py-2 text-xs sm:text-sm"
+          >
+            Sessions
+          </TabsTrigger>
+        </TabsList>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+        <TabsContent value="comptabilite" className="mt-0">
+          <AdminAccountingSection />
+        </TabsContent>
+
+        <TabsContent value="formateurs" className="mt-0">
+          <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -378,9 +422,11 @@ export default function AdminPage() {
             )}
           </CardContent>
         </Card>
-      </div>
+          </div>
+        </TabsContent>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+        <TabsContent value="financeurs" className="mt-0">
+          <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -542,11 +588,16 @@ export default function AdminPage() {
             )}
           </CardContent>
         </Card>
-      </div>
+          </div>
+        </TabsContent>
 
+        <TabsContent value="sessions" className="mt-0">
       <Card>
         <CardHeader>
-          <CardTitle>Assigner les formateurs aux sessions</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <CalendarDays className="size-5" />
+            Assigner les formateurs aux sessions
+          </CardTitle>
           <CardDescription>
             Choisissez le formateur responsable de chaque session active.
           </CardDescription>
@@ -596,6 +647,8 @@ export default function AdminPage() {
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
