@@ -7,8 +7,13 @@ import {
   BarChart3,
   GraduationCap,
   LayoutDashboard,
+  LogOut,
+  Shield,
   Users,
 } from "lucide-react";
+import { useAuth } from "@/components/providers/auth-provider";
+import { ROLE_LABELS } from "@/lib/auth-types";
+import { Button } from "@/components/ui/button";
 import { AppBackground } from "@/components/app-background";
 import { CommandPalette } from "@/components/command-palette";
 import { KeyboardHelpDialog } from "@/components/keyboard-help-dialog";
@@ -26,6 +31,12 @@ const nav = [
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { user, logout } = useAuth();
+
+  const isAuthPage =
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/inscription") ||
+    pathname.startsWith("/sign/");
 
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -42,6 +53,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [pathname, router]);
+
+  if (isAuthPage) {
+    return (
+      <div className="relative flex min-h-full flex-col">
+        <AppBackground className="no-print" />
+        <main className="relative z-10 flex-1">{children}</main>
+      </div>
+    );
+  }
+
+  const navItems = [
+    ...nav,
+    ...(user?.role === "SUPER_ADMIN"
+      ? [{ href: "/admin", label: "Admin", icon: Shield }]
+      : []),
+  ];
 
   return (
     <div className="relative flex min-h-full flex-col">
@@ -77,7 +104,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             aria-label="Navigation principale"
           >
             <div className="flex shrink-0 items-center gap-1 rounded-full border border-border/80 bg-muted/40 p-1 dark:border-white/10 dark:bg-black/20">
-            {nav.map(({ href, label, icon: Icon }) => {
+            {navItems.map(({ href, label, icon: Icon }) => {
               const active =
                 href === "/" ? pathname === "/" : pathname.startsWith(href);
               return (
@@ -99,6 +126,30 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           </nav>
 
+          {user ? (
+            <div className="hidden items-center gap-2 sm:flex">
+              <div className="max-w-[10rem] truncate text-right text-xs leading-tight">
+                <p className="font-medium text-foreground">
+                  {user.firstName} {user.lastName}
+                </p>
+                <p className="text-muted-foreground">{ROLE_LABELS[user.role]}</p>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="shrink-0 rounded-full"
+                aria-label="Se déconnecter"
+                onClick={async () => {
+                  await logout();
+                  router.push("/login");
+                  router.refresh();
+                }}
+              >
+                <LogOut className="size-4" />
+              </Button>
+            </div>
+          ) : null}
           <ThemeToggle />
         </div>
       </header>

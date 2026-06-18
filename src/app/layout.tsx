@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Poppins, Raleway } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
+import { AuthProvider } from "@/components/providers/auth-provider";
 import { FormationProvider } from "@/components/providers/formation-provider";
 import { ConfirmProvider } from "@/components/confirm-provider";
 import { AppShell } from "@/components/app-shell";
@@ -61,10 +62,11 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-sans">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <FormationProvider>
-            <ConfirmProvider>
-              <AppShell>{children}</AppShell>
-            </ConfirmProvider>
+          <AuthProvider>
+            <FormationProvider>
+              <ConfirmProvider>
+                <AppShell>{children}</AppShell>
+              </ConfirmProvider>
             <Toaster
               position="top-center"
               richColors
@@ -77,7 +79,8 @@ export default function RootLayout({
               }}
             />
             <UpdateNotifier />
-          </FormationProvider>
+            </FormationProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

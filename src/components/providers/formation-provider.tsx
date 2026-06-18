@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { usePathname } from "next/navigation";
 import { toast } from "sonner";
 import {
   type AppState,
@@ -121,6 +122,12 @@ const FormationContext = React.createContext<FormationContextValue | null>(
 );
 
 export function FormationProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const isPublicPage =
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/inscription") ||
+    pathname.startsWith("/sign/");
+
   const [state, setState] = React.useState<AppState>(defaultAppState);
   const [hydrated, setHydrated] = React.useState(false);
   const lastRemovedSessionRef = React.useRef<TrainingSession | null>(null);
@@ -150,6 +157,10 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   React.useEffect(() => {
+    if (isPublicPage) {
+      setHydrated(true);
+      return;
+    }
     let cancelled = false;
     void (async () => {
       const remote = await loadAppStateFromApi();
@@ -181,16 +192,16 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isPublicPage]);
 
   React.useEffect(() => {
-    if (!hydrated) return;
+    if (!hydrated || isPublicPage) return;
     const t = window.setTimeout(persist, 400);
     return () => window.clearTimeout(t);
-  }, [state, hydrated, persist]);
+  }, [state, hydrated, persist, isPublicPage]);
 
   React.useEffect(() => {
-    if (!hydrated) return;
+    if (!hydrated || isPublicPage) return;
     const flush = persist;
     const onVis = () => {
       if (document.visibilityState === "hidden") flush();
@@ -201,7 +212,7 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
       window.removeEventListener("pagehide", flush);
       document.removeEventListener("visibilitychange", onVis);
     };
-  }, [hydrated, persist]);
+  }, [hydrated, persist, isPublicPage]);
 
   const addStudent = React.useCallback((input: Omit<Student, "id">) => {
     setState((s) => ({

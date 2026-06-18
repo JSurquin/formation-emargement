@@ -33,6 +33,8 @@ export type TrainingSession = {
   location?: string;
   /** Intervenant référencé sur la feuille. */
   trainer?: string;
+  /** Formateur assigné (compte utilisateur). */
+  trainerUserId?: string;
   /** Horodatage de création (ISO). */
   createdAt?: string;
   /** Dernière modification utile (présences, signatures, méta…). */

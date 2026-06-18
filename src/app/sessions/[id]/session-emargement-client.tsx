@@ -62,7 +62,6 @@ import { useSlashFocus } from "@/hooks/use-slash-focus";
 import { exportSessionAttendanceCsv } from "@/lib/export-csv";
 import { downloadSessionJsonBundle } from "@/lib/export-session-json";
 import { getSessionSignatureSummary } from "@/lib/session-signature";
-import { buildSessionEmailsList } from "@/lib/session-emails-text";
 import { buildSessionSummaryPlainText } from "@/lib/session-summary-text";
 import { downloadSessionIcs } from "@/lib/session-ics";
 import { formatFrenchDateLong } from "@/lib/date-format";
@@ -461,23 +460,26 @@ export function SessionEmargementClient({ sessionId }: { sessionId: string }) {
               variant="outline"
               className="shrink-0 gap-2 rounded-full border-border/80"
               onClick={async () => {
-                const list = buildSessionEmailsList(session, state.students);
-                if (!list.trim()) {
-                  toast.error(
-                    "Aucun e-mail renseigné pour les inscrits de cette feuille.",
-                  );
-                  return;
-                }
                 try {
-                  await navigator.clipboard.writeText(list);
-                  toast.success("Liste d’e-mails copiée (séparateur ;).");
+                  const res = await fetch(
+                    `/api/sessions/${sessionId}/send-emails`,
+                    { method: "POST" },
+                  );
+                  const data = await res.json();
+                  if (!res.ok) {
+                    toast.error(data.error ?? "Envoi impossible.");
+                    return;
+                  }
+                  toast.success(
+                    `${data.sent} e-mail(s) envoyé(s)${data.skipped ? `, ${data.skipped} ignoré(s)` : ""}.`,
+                  );
                 } catch {
-                  toast.error("Impossible de copier.");
+                  toast.error("Envoi impossible.");
                 }
               }}
             >
               <Mail className="size-4 shrink-0" />
-              <span className="whitespace-nowrap">E-mails inscrits</span>
+              <span className="whitespace-nowrap">Envoyer liens émargement</span>
             </Button>
             <Button
               type="button"

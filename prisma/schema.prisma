@@ -6,6 +6,12 @@ datasource db {
   provider = "postgresql"
 }
 
+enum UserRole {
+  SUPER_ADMIN
+  FORMATEUR
+  ELEVE
+}
+
 model AppMeta {
   id               String   @id @default("default")
   schemaVersion    Int      @default(1)
@@ -24,6 +30,7 @@ model Student {
   company   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  user      User?
 }
 
 model TrainingSession {
@@ -37,8 +44,51 @@ model TrainingSession {
   archived       Boolean   @default(false)
   location       String?
   trainer        String?
+  trainerUserId  String?
+  trainerUser    User?     @relation("SessionTrainer", fields: [trainerUserId], references: [id], onDelete: SetNull)
   createdAt      DateTime?
   lastActivityAt DateTime?
   attendance     Json
   updatedAt      DateTime  @updatedAt
+  signTokens     AttendanceSignToken[]
+}
+
+model User {
+  id           String           @id @default(cuid())
+  email        String           @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  role         UserRole
+  studentId    String?          @unique
+  student      Student?         @relation(fields: [studentId], references: [id], onDelete: SetNull)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  sessions     AuthSession[]
+  trainedSessions TrainingSession[] @relation("SessionTrainer")
+}
+
+model AuthSession {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model AttendanceSignToken {
+  id        String          @id @default(cuid())
+  token     String          @unique
+  sessionId String
+  studentId String
+  halfDay   String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime        @default(now())
+  session   TrainingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, studentId])
 }
