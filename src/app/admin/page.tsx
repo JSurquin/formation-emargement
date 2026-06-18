@@ -33,8 +33,12 @@ type Trainer = {
   lastName: string;
 };
 
+function trainerDisplayName(trainer: Trainer): string {
+  return `${trainer.firstName} ${trainer.lastName}`.trim();
+}
+
 export default function AdminPage() {
-  const { state, hydrated } = useFormation();
+  const { state, hydrated, updateSession } = useFormation();
   const [trainers, setTrainers] = React.useState<Trainer[]>([]);
   const [loadingTrainers, setLoadingTrainers] = React.useState(true);
   const [creating, setCreating] = React.useState(false);
@@ -63,6 +67,20 @@ export default function AdminPage() {
   const [editFunderName, setEditFunderName] = React.useState("");
   const [editFunderSiret, setEditFunderSiret] = React.useState("");
   const [editFunderEmail, setEditFunderEmail] = React.useState("");
+  const [sessionTrainerIds, setSessionTrainerIds] = React.useState<
+    Record<string, string | null>
+  >({});
+
+  const trainerSelectItems = React.useMemo(
+    () => [
+      { value: "none", label: "Aucun" },
+      ...trainers.map((t) => ({
+        value: t.id,
+        label: trainerDisplayName(t),
+      })),
+    ],
+    [trainers],
+  );
 
   const loadTrainers = React.useCallback(async () => {
     setLoadingTrainers(true);
@@ -97,6 +115,17 @@ export default function AdminPage() {
   React.useEffect(() => {
     void loadFunders();
   }, [loadFunders]);
+
+  React.useEffect(() => {
+    if (!hydrated) return;
+    const next: Record<string, string | null> = {};
+    for (const session of state.sessions) {
+      if (!session.archived) {
+        next[session.id] = session.trainerUserId ?? null;
+      }
+    }
+    setSessionTrainerIds(next);
+  }, [hydrated, state.sessions]);
 
   const createFunder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -230,6 +259,16 @@ export default function AdminPage() {
         return;
       }
       toast.success("Formateur assigné.");
+      setSessionTrainerIds((prev) => ({
+        ...prev,
+        [sessionId]: trainerUserId,
+      }));
+      const trainer = trainerUserId
+        ? trainers.find((t) => t.id === trainerUserId)
+        : undefined;
+      updateSession(sessionId, {
+        trainer: trainer ? trainerDisplayName(trainer) : undefined,
+      });
     } catch {
       toast.error("Assignation impossible.");
     } finally {
@@ -529,6 +568,8 @@ export default function AdminPage() {
                     <p className="text-sm text-muted-foreground">{session.date}</p>
                   </div>
                   <Select
+                    value={sessionTrainerIds[session.id] ?? "none"}
+                    items={trainerSelectItems}
                     disabled={assigning === session.id}
                     onValueChange={(value: string | null) =>
                       assignTrainer(
@@ -544,7 +585,7 @@ export default function AdminPage() {
                       <SelectItem value="none">Aucun</SelectItem>
                       {trainers.map((t) => (
                         <SelectItem key={t.id} value={t.id}>
-                          {t.firstName} {t.lastName}
+                          {trainerDisplayName(t)}
                         </SelectItem>
                       ))}
                     </SelectContent>

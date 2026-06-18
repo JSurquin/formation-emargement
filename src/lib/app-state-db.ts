@@ -226,6 +226,7 @@ function rowToSession(row: {
   archived: boolean;
   location: string | null;
   trainer: string | null;
+  trainerUserId: string | null;
   trainerDocuments: Prisma.JsonValue | null;
   attestationSignatures: Prisma.JsonValue | null;
   sessionAccounting: Prisma.JsonValue | null;
@@ -246,6 +247,7 @@ function rowToSession(row: {
     archived: row.archived || undefined,
     location: row.location ?? undefined,
     trainer: row.trainer ?? undefined,
+    trainerUserId: row.trainerUserId ?? undefined,
     trainerDocuments: asTrainerDocuments(row.trainerDocuments),
     attestationSignatures: asAttestationSignatures(row.attestationSignatures),
     sessionAccounting: asSessionAccounting(row.sessionAccounting),
