@@ -15,8 +15,10 @@ import {
   buildConvocationEmail,
   buildMissingDocumentsReminderEmail,
   buildPresenceConfirmationReminderEmail,
+  getDocumentsReminderRecipient,
   type ReminderKind,
 } from "@/lib/student-reminder-text";
+import { usesFunderEmailForDocumentReminder } from "@/lib/funding-method";
 import type { Student, TrainingSession } from "@/lib/types";
 import type { FundingMethod } from "@/lib/funding-method";
 import { isFundingMethod } from "@/lib/funding-method";
@@ -180,10 +182,14 @@ export async function POST(request: Request, { params }: Params) {
     }
 
     if (kind === "documents") {
-      to = student.email?.trim() ?? "";
+      to = getDocumentsReminderRecipient(student);
       if (!to) {
         return NextResponse.json(
-          { error: "Le candidat n'a pas d'adresse e-mail." },
+          {
+            error: usesFunderEmailForDocumentReminder(student.fundingMethod)
+              ? "Renseignez l'e-mail du financeur sur la fiche candidat."
+              : "Le candidat n'a pas d'adresse e-mail.",
+          },
           { status: 400 },
         );
       }

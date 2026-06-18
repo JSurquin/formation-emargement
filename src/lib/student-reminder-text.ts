@@ -1,4 +1,7 @@
-import { getFundingMethodLabel } from "./funding-method";
+import {
+  getFundingMethodLabel,
+  usesFunderEmailForDocumentReminder,
+} from "./funding-method";
 import type { Student, TrainingSession } from "./types";
 
 function formatFrenchDate(isoDate: string): string {
@@ -47,26 +50,46 @@ export function buildConventionReminderEmail(input: {
   return { subject, text };
 }
 
+export function getDocumentsReminderRecipient(student: Student): string {
+  if (usesFunderEmailForDocumentReminder(student.fundingMethod)) {
+    return student.funderEmail?.trim() ?? "";
+  }
+  return student.email?.trim() ?? "";
+}
+
 export function buildMissingDocumentsReminderEmail(input: {
   student: Student;
   organizationName?: string;
   missingLabels: string[];
 }): { subject: string; text: string } {
   const org = input.organizationName?.trim() || "L'organisme de formation";
-  const studentName = input.student.firstName;
+  const studentName = `${input.student.firstName} ${input.student.lastName}`;
+  const toFunder = usesFunderEmailForDocumentReminder(input.student.fundingMethod);
 
-  const subject = `Documents manquants — inscription formation`;
-  const text = [
-    `Bonjour ${studentName},`,
-    "",
-    "Pour finaliser votre inscription, il nous manque encore :",
-    ...input.missingLabels.map((l) => `• ${l}`),
-    "",
-    "Merci de nous transmettre ces éléments ou de les déposer sur votre fiche candidat dans les plus brefs délais.",
-    "",
-    "Cordialement,",
-    org,
-  ].join("\n");
+  const subject = `Documents manquants — inscription formation — ${studentName}`;
+  const text = toFunder
+    ? [
+        "Bonjour,",
+        "",
+        `Pour finaliser l'inscription de ${studentName} à la formation, il nous manque encore :`,
+        ...input.missingLabels.map((l) => `• ${l}`),
+        "",
+        "Merci de nous transmettre ces éléments ou de faire parvenir au candidat les pièces demandées dans les plus brefs délais.",
+        "",
+        "Cordialement,",
+        org,
+      ].join("\n")
+    : [
+        `Bonjour ${input.student.firstName},`,
+        "",
+        "Pour finaliser votre inscription, il nous manque encore :",
+        ...input.missingLabels.map((l) => `• ${l}`),
+        "",
+        "Merci de nous transmettre ces éléments ou de les déposer sur votre fiche candidat dans les plus brefs délais.",
+        "",
+        "Cordialement,",
+        org,
+      ].join("\n");
 
   return { subject, text };
 }

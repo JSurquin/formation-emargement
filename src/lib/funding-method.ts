@@ -29,6 +29,13 @@ export function isFundingMethod(value: string): value is FundingMethod {
   return FUNDING_METHOD_OPTIONS.some((o) => o.value === value);
 }
 
+/** Relance documents : financeur pour plan employeur, candidat sinon. */
+export function usesFunderEmailForDocumentReminder(
+  fundingMethod: FundingMethod | undefined,
+): boolean {
+  return fundingMethod === "employeur";
+}
+
 export function normalizeFundingMethodFromImport(
   raw: string,
 ): FundingMethod | undefined {

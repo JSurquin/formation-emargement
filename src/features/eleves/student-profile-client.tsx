@@ -61,6 +61,7 @@ import {
   buildConvocationEmail,
   buildMailtoUrl,
   buildMissingDocumentsReminderEmail,
+  getDocumentsReminderRecipient,
   buildPresenceConfirmationReminderEmail,
   type ReminderKind,
 } from "@/lib/student-reminder-text";
@@ -747,7 +748,8 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
             </div>
             <p className="text-xs text-muted-foreground sm:col-span-2">
               Ces informations apparaissent sur la convention imprimée. L&apos;e-mail
-              sert aussi à la relance si la convention n&apos;est pas signée.
+              sert aussi aux relances convention et documents manquants (financement
+              employeur).
             </p>
           </CardContent>
         </Card>
@@ -883,7 +885,10 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
                   type="button"
                   variant="outline"
                   className="gap-2 rounded-full"
-                  disabled={sendingReminder === "documents"}
+                  disabled={
+                    sendingReminder === "documents" ||
+                    !getDocumentsReminderRecipient(student)
+                  }
                   onClick={() => sendReminder("documents")}
                 >
                   <Mail className="size-4" />
