@@ -5,6 +5,7 @@ import { FormationProvider } from "@/components/providers/formation-provider";
 import { ConfirmProvider } from "@/components/confirm-provider";
 import { AppShell } from "@/components/app-shell";
 import { Toaster } from "@/components/ui/sonner";
+import UpdateNotifier from "@/components/update-notifier";
 import "./globals.css";
 
 const raleway = Raleway({
@@ -75,6 +76,7 @@ export default function RootLayout({
                 },
               }}
             />
+            <UpdateNotifier />
           </FormationProvider>
         </ThemeProvider>
       </body>
