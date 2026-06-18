@@ -30,6 +30,9 @@ model Student {
   company              String?
   socialSecurityNumber String?
   fundingMethod        String?
+  funderEmail          String?
+  conventionSignedAt   String?
+  presenceConfirmedForSessionId String?
   documents            Json?
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt

@@ -33,6 +33,12 @@ export type Student = {
   socialSecurityNumber?: string;
   /** Moyen de financement (CPF, OPCO, employeur…) — convention & dossiers. */
   fundingMethod?: FundingMethod;
+  /** E-mail du financeur (OPCO, employeur…) pour les relances convention. */
+  funderEmail?: string;
+  /** Date de signature de la convention (ISO). */
+  conventionSignedAt?: string;
+  /** Session pour laquelle le candidat a confirmé sa présence. */
+  presenceConfirmedForSessionId?: string;
   /** Justificatifs d'inscription (carte d'identité, etc.). */
   documents?: StudentDocument[];
 };

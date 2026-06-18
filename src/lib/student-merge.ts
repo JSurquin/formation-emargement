@@ -27,6 +27,16 @@ export function mergeStudentsIntoLocal(
             : cur.socialSecurityNumber,
         fundingMethod:
           s.fundingMethod !== undefined ? s.fundingMethod : cur.fundingMethod,
+        funderEmail:
+          s.funderEmail !== undefined ? s.funderEmail : cur.funderEmail,
+        conventionSignedAt:
+          s.conventionSignedAt !== undefined
+            ? s.conventionSignedAt
+            : cur.conventionSignedAt,
+        presenceConfirmedForSessionId:
+          s.presenceConfirmedForSessionId !== undefined
+            ? s.presenceConfirmedForSessionId
+            : cur.presenceConfirmedForSessionId,
         documents: s.documents !== undefined ? s.documents : cur.documents,
       });
     } else {

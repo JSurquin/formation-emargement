@@ -6,10 +6,13 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   ArrowLeft,
+  CheckCircle2,
+  CircleAlert,
   Download,
   ExternalLink,
   FileText,
   IdCard,
+  Mail,
   Printer,
   Trash2,
   Upload,
@@ -45,6 +48,19 @@ import {
 import { cn } from "@/lib/utils";
 import { FUNDING_METHOD_OPTIONS, type FundingMethod } from "@/lib/funding-method";
 import {
+  getStudentFollowUp,
+  hasIdentityDocument,
+  isConventionSigned,
+  isPresenceConfirmedForSession,
+} from "@/lib/student-follow-up";
+import {
+  buildConventionReminderEmail,
+  buildMailtoUrl,
+  buildMissingDocumentsReminderEmail,
+  buildPresenceConfirmationReminderEmail,
+  type ReminderKind,
+} from "@/lib/student-reminder-text";
+import {
   StudentProfilePrint,
   type StudentProfilePrintMode,
 } from "@/components/student-profile-print";
@@ -73,6 +89,9 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
   const [fundingMethod, setFundingMethod] = React.useState<
     FundingMethod | ""
   >("");
+  const [funderEmail, setFunderEmail] = React.useState("");
+  const [sendingReminder, setSendingReminder] =
+    React.useState<ReminderKind | null>(null);
   const [docKind, setDocKind] =
     React.useState<(typeof DOCUMENT_PRESETS)[number]["value"]>("identity");
   const [docLabel, setDocLabel] = React.useState("");
@@ -90,6 +109,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
         : "",
     );
     setFundingMethod(student.fundingMethod ?? "");
+    setFunderEmail(student.funderEmail ?? "");
   }, [student]);
 
   React.useEffect(() => {
@@ -117,6 +137,106 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
     [state.sessions, studentId],
   );
 
+  const followUp = React.useMemo(() => {
+    if (!student) return null;
+    return getStudentFollowUp(student, state.sessions);
+  }, [student, state.sessions]);
+
+  const sendReminder = async (kind: ReminderKind) => {
+    if (!student) return;
+    setSendingReminder(kind);
+    try {
+      const res = await fetch(`/api/students/${student.id}/send-reminder`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: kind }),
+      });
+      const data = (await res.json()) as {
+        error?: string;
+        sent?: boolean;
+        to?: string;
+        subject?: string;
+        text?: string;
+      };
+      if (!res.ok) {
+        toast.error(data.error ?? "Envoi impossible.");
+        return;
+      }
+      if (data.sent) {
+        toast.success("E-mail de relance envoyé.");
+        return;
+      }
+      if (data.to && data.subject && data.text) {
+        window.location.href = buildMailtoUrl(data.to, data.subject, data.text);
+        toast.message(
+          "Serveur mail non configuré — votre client mail s'ouvre avec le message pré-rempli.",
+        );
+      }
+    } catch {
+      toast.error("Envoi impossible.");
+    } finally {
+      setSendingReminder(null);
+    }
+  };
+
+  const copyReminderText = async (kind: ReminderKind) => {
+    if (!student || !followUp) return;
+    const org = state.organizationName;
+    let text = "";
+    if (kind === "convention") {
+      text = buildConventionReminderEmail({ student, organizationName: org }).text;
+    } else if (kind === "documents") {
+      const missing = followUp.items
+        .filter((i) => !i.ok && i.id !== "convention" && i.id !== "presence")
+        .map((i) => i.label);
+      if (!hasIdentityDocument(student)) {
+        missing.unshift("Pièce d'identité (carte d'identité ou passeport)");
+      }
+      text = buildMissingDocumentsReminderEmail({
+        student,
+        organizationName: org,
+        missingLabels: [...new Set(missing)],
+      }).text;
+    } else if (followUp.upcomingSession) {
+      text = buildPresenceConfirmationReminderEmail({
+        student,
+        session: followUp.upcomingSession,
+        organizationName: org,
+      }).text;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Texte de relance copié.");
+    } catch {
+      toast.error("Impossible de copier le texte.");
+    }
+  };
+
+  const toggleConventionSigned = () => {
+    if (!student) return;
+    if (isConventionSigned(student)) {
+      updateStudent(student.id, { conventionSignedAt: undefined });
+      toast.success("Convention marquée comme non signée.");
+      return;
+    }
+    updateStudent(student.id, {
+      conventionSignedAt: new Date().toISOString(),
+    });
+    toast.success("Convention marquée comme signée.");
+  };
+
+  const togglePresenceConfirmed = () => {
+    if (!student || !followUp?.upcomingSession) return;
+    const sessionId = followUp.upcomingSession.id;
+    if (isPresenceConfirmedForSession(student, sessionId)) {
+      updateStudent(student.id, { presenceConfirmedForSessionId: undefined });
+      toast.success("Présence marquée comme non confirmée.");
+      return;
+    }
+    updateStudent(student.id, { presenceConfirmedForSessionId: sessionId });
+    toast.success("Présence confirmée pour la prochaine session.");
+  };
+
   const onSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (!student) return;
@@ -138,6 +258,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
       company: company.trim() || undefined,
       socialSecurityNumber: socialSecurityNumber.replace(/\s/g, ""),
       fundingMethod: fundingMethod || undefined,
+      funderEmail: funderEmail.trim() || undefined,
     });
     toast.success("Fiche candidat enregistrée.");
   };
@@ -364,6 +485,187 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="grid gap-2 sm:col-span-2">
+              <Label htmlFor="profile-funder-em">E-mail du financeur</Label>
+              <Input
+                id="profile-funder-em"
+                type="email"
+                value={funderEmail}
+                onChange={(e) => setFunderEmail(e.target.value)}
+                placeholder="ex. contact@opco.fr"
+                className="bg-background/80"
+              />
+              <p className="text-xs text-muted-foreground">
+                Utilisé pour la relance automatique si la convention n&apos;est pas signée.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="dg-surface ring-0">
+          <CardHeader className="border-b border-border/50 pb-4 dark:border-white/10">
+            <CardTitle className="flex items-center gap-2 font-heading text-lg">
+              <Mail className="size-5 text-indigo-600 dark:text-violet-300" />
+              Suivi dossier &amp; relances
+            </CardTitle>
+            <CardDescription>
+              État du dossier d&apos;inscription et envoi de rappels par e-mail
+              (convention, documents manquants, confirmation de présence).
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6 pt-6">
+            {followUp ? (
+              <ul className="space-y-2">
+                {followUp.items.map((item) => (
+                  <li
+                    key={item.id}
+                    className="flex items-start gap-3 rounded-xl border border-border/70 bg-muted/20 px-4 py-3 dark:border-white/10"
+                  >
+                    {item.ok ? (
+                      <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-600" />
+                    ) : (
+                      <CircleAlert className="mt-0.5 size-4 shrink-0 text-amber-600" />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p
+                        className={cn(
+                          "text-sm font-medium",
+                          item.ok ? "text-emerald-900 dark:text-emerald-100" : "",
+                        )}
+                      >
+                        {item.label}
+                      </p>
+                      {!item.ok ? (
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          Action requise
+                        </p>
+                      ) : null}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+
+            <div className="flex flex-wrap gap-3">
+              <Button
+                type="button"
+                variant={isConventionSigned(student) ? "secondary" : "outline"}
+                className="gap-2 rounded-full"
+                onClick={toggleConventionSigned}
+              >
+                <CheckCircle2 className="size-4" />
+                {isConventionSigned(student)
+                  ? "Convention signée"
+                  : "Marquer convention signée"}
+              </Button>
+              {followUp?.upcomingSession ? (
+                <Button
+                  type="button"
+                  variant={
+                    isPresenceConfirmedForSession(
+                      student,
+                      followUp.upcomingSession.id,
+                    )
+                      ? "secondary"
+                      : "outline"
+                  }
+                  className="gap-2 rounded-full"
+                  onClick={togglePresenceConfirmed}
+                >
+                  <CheckCircle2 className="size-4" />
+                  {isPresenceConfirmedForSession(
+                    student,
+                    followUp.upcomingSession.id,
+                  )
+                    ? "Présence confirmée"
+                    : "Confirmer la présence"}
+                </Button>
+              ) : null}
+            </div>
+
+            <div className="space-y-4 rounded-xl border border-border/70 bg-background/50 p-4 dark:border-white/10">
+              <p className="font-heading text-sm font-semibold">Relances e-mail</p>
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="gap-2 rounded-full"
+                  disabled={
+                    sendingReminder === "convention" ||
+                    isConventionSigned(student) ||
+                    !funderEmail.trim()
+                  }
+                  onClick={() => sendReminder("convention")}
+                >
+                  <Mail className="size-4" />
+                  {sendingReminder === "convention"
+                    ? "Envoi…"
+                    : "Relancer le financeur (convention)"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="gap-2 rounded-full"
+                  disabled={sendingReminder === "documents"}
+                  onClick={() => sendReminder("documents")}
+                >
+                  <Mail className="size-4" />
+                  {sendingReminder === "documents"
+                    ? "Envoi…"
+                    : "Relancer documents manquants"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="gap-2 rounded-full"
+                  disabled={
+                    sendingReminder === "presence" || !followUp?.upcomingSession
+                  }
+                  onClick={() => sendReminder("presence")}
+                >
+                  <Mail className="size-4" />
+                  {sendingReminder === "presence"
+                    ? "Envoi…"
+                    : "Demander confirmation de présence"}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Si le serveur mail n&apos;est pas configuré, votre client mail
+                s&apos;ouvrira avec le message pré-rempli. Vous pouvez aussi
+                copier le texte ci-dessous.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="rounded-full"
+                  onClick={() => copyReminderText("convention")}
+                >
+                  Copier texte convention
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="rounded-full"
+                  onClick={() => copyReminderText("documents")}
+                >
+                  Copier texte documents
+                </Button>
+                {followUp?.upcomingSession ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="rounded-full"
+                    onClick={() => copyReminderText("presence")}
+                  >
+                    Copier texte présence
+                  </Button>
+                ) : null}
+              </div>
             </div>
           </CardContent>
         </Card>

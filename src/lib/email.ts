@@ -134,3 +134,29 @@ export async function sendWelcomeEmail(input: {
 
   await sendMail({ to: input.to, subject, text, html });
 }
+
+function textToHtml(text: string): string {
+  return text
+    .split("\n")
+    .map((line) => (line ? `<p>${line}</p>` : "<br/>"))
+    .join("");
+}
+
+export async function sendPlainReminderEmail(input: {
+  to: string;
+  subject: string;
+  text: string;
+}): Promise<boolean> {
+  const config = getMailConfig();
+  if (!config) {
+    console.warn("[email] SMTP non configuré — e-mail non envoyé:", input.to);
+    return false;
+  }
+  await sendMail({
+    to: input.to,
+    subject: input.subject,
+    text: input.text,
+    html: textToHtml(input.text),
+  });
+  return true;
+}

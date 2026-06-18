@@ -112,6 +112,9 @@ function rowToStudent(row: {
   company: string | null;
   socialSecurityNumber: string | null;
   fundingMethod: string | null;
+  funderEmail: string | null;
+  conventionSignedAt: string | null;
+  presenceConfirmedForSessionId: string | null;
   documents: Prisma.JsonValue | null;
 }): Student {
   return {
@@ -125,6 +128,10 @@ function rowToStudent(row: {
     fundingMethod: isFundingMethod(row.fundingMethod ?? "")
       ? (row.fundingMethod as FundingMethod)
       : undefined,
+    funderEmail: row.funderEmail ?? undefined,
+    conventionSignedAt: row.conventionSignedAt ?? undefined,
+    presenceConfirmedForSessionId:
+      row.presenceConfirmedForSessionId ?? undefined,
     documents: asStudentDocuments(row.documents),
   };
 }
@@ -256,6 +263,10 @@ export async function saveAppStateToDb(state: AppState): Promise<void> {
           company: student.company ?? null,
           socialSecurityNumber: student.socialSecurityNumber ?? null,
           fundingMethod: student.fundingMethod ?? null,
+          funderEmail: student.funderEmail ?? null,
+          conventionSignedAt: student.conventionSignedAt ?? null,
+          presenceConfirmedForSessionId:
+            student.presenceConfirmedForSessionId ?? null,
           documents,
         },
         update: {
@@ -266,6 +277,10 @@ export async function saveAppStateToDb(state: AppState): Promise<void> {
           company: student.company ?? null,
           socialSecurityNumber: student.socialSecurityNumber ?? null,
           fundingMethod: student.fundingMethod ?? null,
+          funderEmail: student.funderEmail ?? null,
+          conventionSignedAt: student.conventionSignedAt ?? null,
+          presenceConfirmedForSessionId:
+            student.presenceConfirmedForSessionId ?? null,
           documents,
         },
       });
