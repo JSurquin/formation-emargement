@@ -2,10 +2,9 @@
   "name": "digiforma-like",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "npm@10.9.2",
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "prisma generate && next build && node scripts/notify-success.js",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
