@@ -57,6 +57,8 @@ export type Student = {
   company?: string;
   /** Numéro de sécurité sociale (NIR) — requis à la création, utile CPF / Heliopie. */
   socialSecurityNumber?: string;
+  /** Date de naissance (YYYY-MM-DD). */
+  dateOfBirth?: string;
   /** Moyen de financement (CPF, OPCO, employeur…) — convention & dossiers. */
   fundingMethod?: FundingMethod;
   /** Nom du financeur (OPCO, employeur…) — convention. */

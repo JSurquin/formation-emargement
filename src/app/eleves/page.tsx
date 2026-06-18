@@ -78,6 +78,7 @@ export default function ElevesPage() {
   const [phone, setPhone] = React.useState("");
   const [company, setCompany] = React.useState("");
   const [socialSecurityNumber, setSocialSecurityNumber] = React.useState("");
+  const [dateOfBirth, setDateOfBirth] = React.useState("");
   const [qAnnuaire, setQAnnuaire] = React.useState("");
   const [editOpen, setEditOpen] = React.useState(false);
   const [editStudent, setEditStudent] = React.useState<Student | null>(null);
@@ -87,6 +88,7 @@ export default function ElevesPage() {
   const [eph, setEph] = React.useState("");
   const [eco, setEco] = React.useState("");
   const [essn, setEssn] = React.useState("");
+  const [edob, setEdob] = React.useState("");
   const importStudentsCsvRef = React.useRef<HTMLInputElement>(null);
   const importStudentsJsonRef = React.useRef<HTMLInputElement>(null);
 
@@ -108,6 +110,7 @@ export default function ElevesPage() {
     setEph(editStudent.phone ?? "");
     setEco(editStudent.company ?? "");
     setEssn(editStudent.socialSecurityNumber ?? "");
+    setEdob(editStudent.dateOfBirth ?? "");
   }, [editStudent]);
 
   useSlashFocus("annuaire-search", hydrated);
@@ -193,6 +196,7 @@ export default function ElevesPage() {
       phone: phone.trim() || undefined,
       company: company.trim() || undefined,
       socialSecurityNumber: socialSecurityNumber.replace(/\s/g, ""),
+      dateOfBirth: dateOfBirth.trim() || undefined,
     });
     setFirstName("");
     setLastName("");
@@ -200,6 +204,7 @@ export default function ElevesPage() {
     setPhone("");
     setCompany("");
     setSocialSecurityNumber("");
+    setDateOfBirth("");
     toast.success("Élève ajouté — complétez la fiche candidat si besoin.");
   };
 
@@ -228,6 +233,7 @@ export default function ElevesPage() {
       phone: eph.trim() || undefined,
       company: eco.trim() || undefined,
       socialSecurityNumber: essn.replace(/\s/g, ""),
+      dateOfBirth: edob.trim() || undefined,
     });
     setEditOpen(false);
     setEditStudent(null);
@@ -415,6 +421,16 @@ export default function ElevesPage() {
                   required
                   inputMode="numeric"
                   className="bg-background/80 font-mono"
+                />
+              </div>
+              <div className="grid min-w-0 flex-1 gap-2 sm:min-w-[180px]">
+                <Label htmlFor="dob">Date de naissance (optionnel)</Label>
+                <Input
+                  id="dob"
+                  type="date"
+                  value={dateOfBirth}
+                  onChange={(e) => setDateOfBirth(e.target.value)}
+                  className="bg-background/80"
                 />
               </div>
               <Button
@@ -691,6 +707,16 @@ export default function ElevesPage() {
                   required
                   inputMode="numeric"
                   className="bg-background/80 font-mono"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-dob">Date de naissance</Label>
+                <Input
+                  id="edit-dob"
+                  type="date"
+                  value={edob}
+                  onChange={(e) => setEdob(e.target.value)}
+                  className="bg-background/80"
                 />
               </div>
               <div className="grid gap-2">

@@ -5,7 +5,7 @@ import {
   buildConventionParticipantRows,
   formatSiret,
 } from "@/lib/convention-print";
-import { formatFrenchDateLong } from "@/lib/date-format";
+import { formatFrenchDateLong, formatFrenchDateShort } from "@/lib/date-format";
 import { getFundingMethodLabel } from "@/lib/funding-method";
 import { formatSocialSecurityNumber } from "@/lib/student-profile";
 import { formatAttestationIssueDate } from "@/lib/training-attestation";
@@ -83,6 +83,9 @@ export function StudentProfilePrint({
   const fundingLabel = getFundingMethodLabel(student.fundingMethod);
   const ssn = student.socialSecurityNumber
     ? formatSocialSecurityNumber(student.socialSecurityNumber)
+    : undefined;
+  const birthDate = student.dateOfBirth
+    ? formatFrenchDateShort(student.dateOfBirth)
     : undefined;
   const funderSiret = student.funderSiret
     ? formatSiret(student.funderSiret)
@@ -172,6 +175,7 @@ export function StudentProfilePrint({
                   value={student.lastName.toUpperCase()}
                 />
                 <TemplateFieldRow label="Prénom" value={student.firstName} />
+                <TemplateFieldRow label="Date de naissance" value={birthDate} />
                 <TemplateFieldRow label="E-mail" value={student.email} />
                 <TemplateFieldRow label="Téléphone" value={student.phone} />
                 <TemplateFieldRow
@@ -275,6 +279,7 @@ export function StudentProfilePrint({
         <tbody>
           <FieldRow label="Prénom" value={student.firstName} />
           <FieldRow label="Nom" value={student.lastName} />
+          <FieldRow label="Date de naissance" value={birthDate} />
           <FieldRow label="E-mail" value={student.email} />
           <FieldRow label="Téléphone" value={student.phone} />
           <FieldRow label="Structure / employeur" value={student.company} />

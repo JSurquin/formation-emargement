@@ -100,6 +100,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
   const [phone, setPhone] = React.useState("");
   const [company, setCompany] = React.useState("");
   const [socialSecurityNumber, setSocialSecurityNumber] = React.useState("");
+  const [dateOfBirth, setDateOfBirth] = React.useState("");
   const [fundingMethod, setFundingMethod] = React.useState<
     FundingMethod | ""
   >("");
@@ -126,6 +127,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
         ? formatSocialSecurityNumber(student.socialSecurityNumber)
         : "",
     );
+    setDateOfBirth(student.dateOfBirth ?? "");
     setFundingMethod(student.fundingMethod ?? "");
     setFunderName(student.funderName ?? "");
     setFunderSiret(
@@ -361,6 +363,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
       phone: phone.trim() || undefined,
       company: company.trim() || undefined,
       socialSecurityNumber: socialSecurityNumber.replace(/\s/g, ""),
+      dateOfBirth: dateOfBirth.trim() || undefined,
       fundingMethod: fundingMethod || undefined,
       funderName: funderName.trim() || undefined,
       funderSiret: funderSiret.replace(/\s/g, "") || undefined,
@@ -625,6 +628,16 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
                 required
                 inputMode="numeric"
                 className="bg-background/80 font-mono tracking-wide"
+              />
+            </div>
+            <div className="grid gap-2 sm:col-span-2">
+              <Label htmlFor="profile-dob">Date de naissance</Label>
+              <Input
+                id="profile-dob"
+                type="date"
+                value={dateOfBirth}
+                onChange={(e) => setDateOfBirth(e.target.value)}
+                className="bg-background/80"
               />
             </div>
           </CardContent>

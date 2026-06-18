@@ -92,6 +92,16 @@ export function parseStudentsCsv(text: string): ParsedStudentRow[] | null {
     "securite sociale",
     "social security",
   ]);
+  const iDob = pickColumn(headers, [
+    "date de naissance",
+    "date naissance",
+    "naissance",
+    "birthdate",
+    "birth date",
+    "dateofbirth",
+    "date of birth",
+    "dob",
+  ]);
   const iFunding = pickColumn(headers, [
     "financement",
     "moyen financement",
@@ -121,6 +131,10 @@ export function parseStudentsCsv(text: string): ParsedStudentRow[] | null {
     if (iSsn >= 0) {
       const ssn = (cells[iSsn] ?? "").replace(/\s/g, "");
       if (ssn) row.socialSecurityNumber = ssn;
+    }
+    if (iDob >= 0) {
+      const dob = (cells[iDob] ?? "").trim();
+      if (dob) row.dateOfBirth = dob;
     }
     if (iFunding >= 0) {
       const funding = normalizeFundingMethodFromImport(cells[iFunding] ?? "");

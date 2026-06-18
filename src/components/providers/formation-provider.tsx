@@ -246,6 +246,7 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
           company: input.company?.trim() || undefined,
           socialSecurityNumber:
             input.socialSecurityNumber?.replace(/\s/g, "") || undefined,
+          dateOfBirth: input.dateOfBirth?.trim() || undefined,
           fundingMethod: input.fundingMethod || undefined,
           funderName: input.funderName?.trim() || undefined,
           funderSiret: input.funderSiret?.replace(/\s/g, "") || undefined,
@@ -280,6 +281,8 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
           if (patch.socialSecurityNumber !== undefined)
             next.socialSecurityNumber =
               patch.socialSecurityNumber.replace(/\s/g, "") || undefined;
+          if (patch.dateOfBirth !== undefined)
+            next.dateOfBirth = patch.dateOfBirth.trim() || undefined;
           if (patch.fundingMethod !== undefined)
             next.fundingMethod = patch.fundingMethod || undefined;
           if (patch.funderName !== undefined)
