@@ -14,6 +14,7 @@ import {
   Printer,
   UserMinus,
   UserPlus,
+  UserX,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -117,6 +118,9 @@ export function SessionEmargementClient({ sessionId }: { sessionId: string }) {
   const [attestationPrintIds, setAttestationPrintIds] = React.useState<
     string[] | null
   >(null);
+  const [notifyingAbsenceId, setNotifyingAbsenceId] = React.useState<
+    string | null
+  >(null);
 
   const session = state.sessions.find((s) => s.id === sessionId);
   const signatureSummary = session
@@ -204,6 +208,44 @@ export function SessionEmargementClient({ sessionId }: { sessionId: string }) {
 
   useSlashFocus("search-table", hydrated && Boolean(session));
 
+  const notifyStudentAbsence = React.useCallback(
+    async (st: Student) => {
+      if (!session) return;
+      setNotifyingAbsenceId(st.id);
+      try {
+        setPresent(session.id, st.id, "morning", false);
+        setPresent(session.id, st.id, "afternoon", false);
+        const res = await fetch(
+          `/api/sessions/${sessionId}/students/${st.id}/notify-absence`,
+          { method: "POST" },
+        );
+        const data = (await res.json()) as {
+          error?: string;
+          sent?: boolean;
+          to?: string;
+        };
+        if (!res.ok) {
+          toast.error(data.error ?? "Notification impossible.");
+          return;
+        }
+        if (data.sent) {
+          toast.success(
+            `Absence enregistrée — financeur prévenu (${data.to}).`,
+          );
+        } else {
+          toast.message(
+            "Absence enregistrée — SMTP non configuré, e-mail non envoyé.",
+          );
+        }
+      } catch {
+        toast.error("Notification impossible.");
+      } finally {
+        setNotifyingAbsenceId(null);
+      }
+    },
+    [session, sessionId, setPresent],
+  );
+
   if (!hydrated) {
     return (
       <div className="space-y-6">
@@ -256,6 +298,11 @@ export function SessionEmargementClient({ sessionId }: { sessionId: string }) {
               <TableHead className="min-w-[160px] pl-4 font-heading sm:pl-6">
                 Élève
               </TableHead>
+              {user && canManageSessions(user.role) ? (
+                <TableHead className="w-[140px] font-heading">
+                  Absence
+                </TableHead>
+              ) : null}
               <TableHead className="w-[100px] text-center font-heading">
                 Présent
               </TableHead>
@@ -271,7 +318,7 @@ export function SessionEmargementClient({ sessionId }: { sessionId: string }) {
             {students.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={4}
+                  colSpan={user && canManageSessions(user.role) ? 5 : 4}
                   className="py-12 text-center text-muted-foreground"
                 >
                   Personne sur cette feuille. Ajoutez des élèves depuis
@@ -281,7 +328,7 @@ export function SessionEmargementClient({ sessionId }: { sessionId: string }) {
             ) : rows.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={4}
+                  colSpan={user && canManageSessions(user.role) ? 5 : 4}
                   className="py-12 text-center text-muted-foreground"
                 >
                   Aucun résultat pour « {qTable.trim() || "…"} » sur cette
@@ -303,6 +350,22 @@ export function SessionEmargementClient({ sessionId }: { sessionId: string }) {
                   <TableCell className="pl-4 font-medium sm:pl-6">
                     {st.firstName} {st.lastName}
                   </TableCell>
+                  {user && canManageSessions(user.role) ? (
+                    <TableCell>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5 rounded-full border-amber-200/80 text-amber-950 hover:bg-amber-50 dark:border-amber-500/35 dark:text-amber-100 dark:hover:bg-amber-500/15"
+                        disabled={notifyingAbsenceId === st.id}
+                        onClick={() => void notifyStudentAbsence(st)}
+                        aria-label={`Signaler l'absence de ${st.firstName} ${st.lastName} au financeur`}
+                      >
+                        <UserX className="size-4" />
+                        Absent
+                      </Button>
+                    </TableCell>
+                  ) : null}
                   <TableCell className="text-center">
                     <div className="flex justify-center">
                       <Checkbox
@@ -794,6 +857,19 @@ export function SessionEmargementClient({ sessionId }: { sessionId: string }) {
                         <span className="text-sm font-medium">
                           {st.firstName} {st.lastName}
                         </span>
+                        {user && canManageSessions(user.role) ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            className="size-8 shrink-0 rounded-full text-amber-800 hover:bg-amber-500/10 hover:text-amber-950 dark:text-amber-200 dark:hover:text-amber-100"
+                            disabled={notifyingAbsenceId === st.id}
+                            aria-label={`Signaler l'absence de ${st.firstName} ${st.lastName} au financeur`}
+                            onClick={() => void notifyStudentAbsence(st)}
+                          >
+                            <UserX className="size-4" />
+                          </Button>
+                        ) : null}
                         <Button
                           type="button"
                           variant="ghost"

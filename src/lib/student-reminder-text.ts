@@ -179,6 +179,36 @@ export function buildPresenceConfirmationReminderEmail(input: {
   return { subject, text };
 }
 
+export function buildAbsenceNotificationEmail(input: {
+  student: Student;
+  session: TrainingSession;
+  organizationName?: string;
+}): { subject: string; text: string } {
+  const org = input.organizationName?.trim() || "L'organisme de formation";
+  const studentName = `${input.student.firstName} ${input.student.lastName}`;
+  const dateLabel = formatFrenchDate(input.session.date);
+  const location = input.session.location?.trim();
+
+  const subject = `Absence — ${studentName} — ${input.session.title}`;
+  const text = [
+    "Bonjour,",
+    "",
+    `Nous vous informons que ${studentName} n'est pas présent(e) sur la session « ${input.session.title} ».`,
+    "",
+    `Date : ${dateLabel}`,
+    location ? `Lieu : ${location}` : "",
+    "",
+    "Merci de nous indiquer la suite à donner au dossier si nécessaire.",
+    "",
+    "Cordialement,",
+    org,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  return { subject, text };
+}
+
 export function buildMailtoUrl(to: string, subject: string, body: string): string {
   const params = new URLSearchParams();
   params.set("subject", subject);

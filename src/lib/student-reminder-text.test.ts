@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildAbsenceNotificationEmail,
   buildConvocationEmail,
   buildConventionToCandidateEmail,
   buildMissingDocumentsReminderEmail,
@@ -77,5 +78,19 @@ describe("student-reminder-text", () => {
     expect(text).toContain("Bonjour,");
     expect(text).toContain("l'inscription de Marie Martin");
     expect(text).not.toContain("votre inscription");
+  });
+
+  it("rédige l'e-mail d'absence pour le financeur", () => {
+    const { subject, text } = buildAbsenceNotificationEmail({
+      student,
+      session,
+      organizationName: "Mon OF",
+    });
+    expect(subject).toContain("Absence");
+    expect(subject).toContain("Marie Martin");
+    expect(text).toContain("n'est pas présent(e)");
+    expect(text).toContain("Excel avancé");
+    expect(text).toContain("Salle A — Paris");
+    expect(text).toContain("Mon OF");
   });
 });
