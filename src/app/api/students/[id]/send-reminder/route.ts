@@ -11,6 +11,8 @@ import {
 } from "@/lib/student-follow-up";
 import {
   buildConventionReminderEmail,
+  buildConventionToCandidateEmail,
+  buildConvocationEmail,
   buildMissingDocumentsReminderEmail,
   buildPresenceConfirmationReminderEmail,
   type ReminderKind,
@@ -73,6 +75,8 @@ function rowToSession(row: {
   date: string;
   studentIds: unknown;
   archived: boolean;
+  location?: string | null;
+  trainer?: string | null;
 }): TrainingSession {
   return {
     id: row.id,
@@ -80,6 +84,8 @@ function rowToSession(row: {
     date: row.date,
     studentIds: asStringArray(row.studentIds),
     archived: row.archived || undefined,
+    location: row.location ?? undefined,
+    trainer: row.trainer ?? undefined,
     attendance: { morning: {}, afternoon: {} },
   };
 }
@@ -94,7 +100,7 @@ export async function POST(request: Request, { params }: Params) {
     const { id: studentId } = await params;
     const body = (await request.json()) as { type?: ReminderKind };
     const kind = body.type;
-    if (!kind || !["convention", "documents", "presence"].includes(kind)) {
+    if (!kind || !["convention", "convention_candidate", "documents", "presence", "convocation"].includes(kind)) {
       return NextResponse.json(
         { error: "Type de relance invalide." },
         { status: 400 },
@@ -112,6 +118,8 @@ export async function POST(request: Request, { params }: Params) {
           date: true,
           studentIds: true,
           archived: true,
+          location: true,
+          trainer: true,
         },
       }),
     ]);
@@ -147,6 +155,22 @@ export async function POST(request: Request, { params }: Params) {
         );
       }
       const built = buildConventionReminderEmail({ student, organizationName });
+      subject = built.subject;
+      text = built.text;
+    }
+
+    if (kind === "convention_candidate") {
+      to = student.email?.trim() ?? "";
+      if (!to) {
+        return NextResponse.json(
+          { error: "Le candidat n'a pas d'adresse e-mail." },
+          { status: 400 },
+        );
+      }
+      const built = buildConventionToCandidateEmail({
+        student,
+        organizationName,
+      });
       subject = built.subject;
       text = built.text;
     }
@@ -197,6 +221,29 @@ export async function POST(request: Request, { params }: Params) {
         );
       }
       const built = buildPresenceConfirmationReminderEmail({
+        student,
+        session: upcomingSession,
+        organizationName,
+      });
+      subject = built.subject;
+      text = built.text;
+    }
+
+    if (kind === "convocation") {
+      if (!upcomingSession) {
+        return NextResponse.json(
+          { error: "Aucune session à venir pour ce candidat." },
+          { status: 400 },
+        );
+      }
+      to = student.email?.trim() ?? "";
+      if (!to) {
+        return NextResponse.json(
+          { error: "Le candidat n'a pas d'adresse e-mail." },
+          { status: 400 },
+        );
+      }
+      const built = buildConvocationEmail({
         student,
         session: upcomingSession,
         organizationName,

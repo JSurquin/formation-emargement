@@ -55,6 +55,8 @@ import {
 } from "@/lib/student-follow-up";
 import {
   buildConventionReminderEmail,
+  buildConventionToCandidateEmail,
+  buildConvocationEmail,
   buildMailtoUrl,
   buildMissingDocumentsReminderEmail,
   buildPresenceConfirmationReminderEmail,
@@ -164,6 +166,9 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
       }
       if (data.sent) {
         toast.success("E-mail de relance envoyé.");
+        if (kind === "convention_candidate") {
+          triggerProfilePrint("convention");
+        }
         return;
       }
       if (data.to && data.subject && data.text) {
@@ -171,6 +176,9 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
         toast.message(
           "Serveur mail non configuré — votre client mail s'ouvre avec le message pré-rempli.",
         );
+        if (kind === "convention_candidate") {
+          window.setTimeout(() => triggerProfilePrint("convention"), 500);
+        }
       }
     } catch {
       toast.error("Envoi impossible.");
@@ -185,6 +193,11 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
     let text = "";
     if (kind === "convention") {
       text = buildConventionReminderEmail({ student, organizationName: org }).text;
+    } else if (kind === "convention_candidate") {
+      text = buildConventionToCandidateEmail({
+        student,
+        organizationName: org,
+      }).text;
     } else if (kind === "documents") {
       const missing = followUp.items
         .filter((i) => !i.ok && i.id !== "convention" && i.id !== "presence")
@@ -197,8 +210,14 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
         organizationName: org,
         missingLabels: [...new Set(missing)],
       }).text;
-    } else if (followUp.upcomingSession) {
+    } else if (followUp.upcomingSession && kind === "presence") {
       text = buildPresenceConfirmationReminderEmail({
+        student,
+        session: followUp.upcomingSession,
+        organizationName: org,
+      }).text;
+    } else if (followUp.upcomingSession && kind === "convocation") {
+      text = buildConvocationEmail({
         student,
         session: followUp.upcomingSession,
         organizationName: org,
@@ -511,7 +530,8 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
             </CardTitle>
             <CardDescription>
               État du dossier d&apos;inscription et envoi de rappels par e-mail
-              (convention, documents manquants, confirmation de présence).
+              (convention, convocation, documents manquants, confirmation de
+              présence).
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6 pt-6">
@@ -607,6 +627,21 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
                   type="button"
                   variant="outline"
                   className="gap-2 rounded-full"
+                  disabled={
+                    sendingReminder === "convention_candidate" ||
+                    !student.email?.trim()
+                  }
+                  onClick={() => sendReminder("convention_candidate")}
+                >
+                  <Mail className="size-4" />
+                  {sendingReminder === "convention_candidate"
+                    ? "Envoi…"
+                    : "Envoyer la convention au candidat"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="gap-2 rounded-full"
                   disabled={sendingReminder === "documents"}
                   onClick={() => sendReminder("documents")}
                 >
@@ -629,11 +664,28 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
                     ? "Envoi…"
                     : "Demander confirmation de présence"}
                 </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="gap-2 rounded-full"
+                  disabled={
+                    sendingReminder === "convocation" ||
+                    !followUp?.upcomingSession ||
+                    !student.email?.trim()
+                  }
+                  onClick={() => sendReminder("convocation")}
+                >
+                  <Mail className="size-4" />
+                  {sendingReminder === "convocation"
+                    ? "Envoi…"
+                    : "Envoyer la convocation"}
+                </Button>
               </div>
               <p className="text-xs text-muted-foreground">
                 Si le serveur mail n&apos;est pas configuré, votre client mail
-                s&apos;ouvrira avec le message pré-rempli. Vous pouvez aussi
-                copier le texte ci-dessous.
+                s&apos;ouvrira avec le message pré-rempli. Pour la convention
+                candidat, le document s&apos;imprime aussi pour l&apos;ajouter en
+                pièce jointe. Vous pouvez aussi copier le texte ci-dessous.
               </p>
               <div className="flex flex-wrap gap-2">
                 <Button
@@ -650,20 +702,40 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
                   variant="ghost"
                   size="sm"
                   className="rounded-full"
+                  onClick={() => copyReminderText("convention_candidate")}
+                >
+                  Copier texte convention candidat
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="rounded-full"
                   onClick={() => copyReminderText("documents")}
                 >
                   Copier texte documents
                 </Button>
                 {followUp?.upcomingSession ? (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="rounded-full"
-                    onClick={() => copyReminderText("presence")}
-                  >
-                    Copier texte présence
-                  </Button>
+                  <>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="rounded-full"
+                      onClick={() => copyReminderText("convocation")}
+                    >
+                      Copier texte convocation
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="rounded-full"
+                      onClick={() => copyReminderText("presence")}
+                    >
+                      Copier texte présence
+                    </Button>
+                  </>
                 ) : null}
               </div>
             </div>
