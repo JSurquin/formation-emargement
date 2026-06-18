@@ -529,9 +529,9 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
               Suivi dossier &amp; relances
             </CardTitle>
             <CardDescription>
-              État du dossier d&apos;inscription et envoi de rappels par e-mail
-              (convention, convocation, documents manquants, confirmation de
-              présence).
+              État du dossier d&apos;inscription, création de la convention
+              depuis cette fiche, et envoi de rappels par e-mail (convocation,
+              documents manquants, confirmation de présence).
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6 pt-6">
@@ -558,7 +558,9 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
                       </p>
                       {!item.ok ? (
                         <p className="mt-0.5 text-xs text-muted-foreground">
-                          Action requise
+                          {item.id === "convention"
+                            ? "Créez la convention ci-dessous, puis faites-la signer"
+                            : "Action requise"}
                         </p>
                       ) : null}
                     </div>
@@ -568,6 +570,15 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
             ) : null}
 
             <div className="flex flex-wrap gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                className="gap-2 rounded-full"
+                onClick={() => triggerProfilePrint("convention")}
+              >
+                <FileText className="size-4" />
+                Créer la convention
+              </Button>
               <Button
                 type="button"
                 variant={isConventionSigned(student) ? "secondary" : "outline"}
@@ -749,8 +760,10 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
               Documents administratifs
             </CardTitle>
             <CardDescription>
-              Imprimez la convention de formation ou la fiche récapitulative avec
-              le moyen de financement du candidat.
+              Imprimez ou enregistrez en PDF la convention de formation ou la
+              fiche récapitulative (moyen de financement inclus). Le bouton
+              « Créer la convention » est aussi disponible dans le suivi dossier
+              ci-dessus.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-3 pt-6">
@@ -761,7 +774,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
               onClick={() => triggerProfilePrint("convention")}
             >
               <Printer className="size-4" />
-              Convention de formation
+              Imprimer la convention
             </Button>
             <Button
               type="button"
