@@ -137,6 +137,8 @@ function rowToStudent(row: {
   phone: string | null;
   company: string | null;
   socialSecurityNumber: string | null;
+  dateOfBirth: string | null;
+  franceTravailId: string | null;
   fundingMethod: string | null;
   funderName: string | null;
   funderSiret: string | null;
@@ -155,6 +157,8 @@ function rowToStudent(row: {
     phone: row.phone ?? undefined,
     company: row.company ?? undefined,
     socialSecurityNumber: row.socialSecurityNumber ?? undefined,
+    dateOfBirth: row.dateOfBirth ?? undefined,
+    franceTravailId: row.franceTravailId ?? undefined,
     fundingMethod: isFundingMethod(row.fundingMethod ?? "")
       ? (row.fundingMethod as FundingMethod)
       : undefined,
@@ -343,6 +347,8 @@ export async function saveAppStateToDb(state: AppState): Promise<void> {
           phone: student.phone ?? null,
           company: student.company ?? null,
           socialSecurityNumber: student.socialSecurityNumber ?? null,
+          dateOfBirth: student.dateOfBirth ?? null,
+          franceTravailId: student.franceTravailId ?? null,
           fundingMethod: student.fundingMethod ?? null,
           funderName: student.funderName ?? null,
           funderSiret: student.funderSiret ?? null,
@@ -361,6 +367,8 @@ export async function saveAppStateToDb(state: AppState): Promise<void> {
           phone: student.phone ?? null,
           company: student.company ?? null,
           socialSecurityNumber: student.socialSecurityNumber ?? null,
+          dateOfBirth: student.dateOfBirth ?? null,
+          franceTravailId: student.franceTravailId ?? null,
           fundingMethod: student.fundingMethod ?? null,
           funderName: student.funderName ?? null,
           funderSiret: student.funderSiret ?? null,

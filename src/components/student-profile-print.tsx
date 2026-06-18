@@ -183,6 +183,10 @@ export function StudentProfilePrint({
                   value={student.company}
                 />
                 <TemplateFieldRow label="N° sécurité sociale" value={ssn} />
+                <TemplateFieldRow
+                  label="Identifiant France Travail"
+                  value={student.franceTravailId}
+                />
               </tbody>
             </table>
           </ConventionSection>
@@ -284,6 +288,10 @@ export function StudentProfilePrint({
           <FieldRow label="Téléphone" value={student.phone} />
           <FieldRow label="Structure / employeur" value={student.company} />
           <FieldRow label="N° sécurité sociale" value={ssn} />
+          <FieldRow
+            label="Identifiant France Travail"
+            value={student.franceTravailId}
+          />
           <FieldRow
             label="Moyen de financement"
             value={fundingLabel ?? "Non renseigné"}

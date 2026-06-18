@@ -29,6 +29,8 @@ model Student {
   phone                String?
   company              String?
   socialSecurityNumber String?
+  dateOfBirth          String?
+  franceTravailId      String?
   fundingMethod        String?
   funderName           String?
   funderSiret          String?

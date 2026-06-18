@@ -27,6 +27,7 @@ export function exportStudentsCsv(students: Student[], filename: string) {
     "Structure",
     "N° sécu. sociale",
     "Date de naissance",
+    "Identifiant France Travail",
     "Moyen de financement",
   ]
     .map(csvCell)
@@ -40,6 +41,7 @@ export function exportStudentsCsv(students: Student[], filename: string) {
       s.company ?? "",
       s.socialSecurityNumber ?? "",
       s.dateOfBirth ?? "",
+      s.franceTravailId ?? "",
       getFundingMethodLabel(s.fundingMethod) ?? "",
     ]
       .map(csvCell)

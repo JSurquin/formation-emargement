@@ -59,6 +59,8 @@ export type Student = {
   socialSecurityNumber?: string;
   /** Date de naissance (YYYY-MM-DD). */
   dateOfBirth?: string;
+  /** Identifiant France Travail du candidat (demandeur d'emploi). */
+  franceTravailId?: string;
   /** Moyen de financement (CPF, OPCO, employeur…) — convention & dossiers. */
   fundingMethod?: FundingMethod;
   /** Nom du financeur (OPCO, employeur…) — convention. */

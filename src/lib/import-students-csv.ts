@@ -102,6 +102,13 @@ export function parseStudentsCsv(text: string): ParsedStudentRow[] | null {
     "date of birth",
     "dob",
   ]);
+  const iFranceTravailId = pickColumn(headers, [
+    "identifiant france travail",
+    "id france travail",
+    "france travail",
+    "pole emploi",
+    "pôle emploi",
+  ]);
   const iFunding = pickColumn(headers, [
     "financement",
     "moyen financement",
@@ -135,6 +142,10 @@ export function parseStudentsCsv(text: string): ParsedStudentRow[] | null {
     if (iDob >= 0) {
       const dob = (cells[iDob] ?? "").trim();
       if (dob) row.dateOfBirth = dob;
+    }
+    if (iFranceTravailId >= 0) {
+      const ftId = (cells[iFranceTravailId] ?? "").trim();
+      if (ftId) row.franceTravailId = ftId;
     }
     if (iFunding >= 0) {
       const funding = normalizeFundingMethodFromImport(cells[iFunding] ?? "");

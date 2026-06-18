@@ -106,6 +106,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
   const [company, setCompany] = React.useState("");
   const [socialSecurityNumber, setSocialSecurityNumber] = React.useState("");
   const [dateOfBirth, setDateOfBirth] = React.useState("");
+  const [franceTravailId, setFranceTravailId] = React.useState("");
   const [fundingMethod, setFundingMethod] = React.useState<
     FundingMethod | ""
   >("");
@@ -133,6 +134,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
         : "",
     );
     setDateOfBirth(student.dateOfBirth ?? "");
+    setFranceTravailId(student.franceTravailId ?? "");
     setFundingMethod(student.fundingMethod ?? "");
     setFunderName(student.funderName ?? "");
     setFunderSiret(
@@ -412,6 +414,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
       company: company.trim() || undefined,
       socialSecurityNumber: socialSecurityNumber.replace(/\s/g, ""),
       dateOfBirth: dateOfBirth.trim() || undefined,
+      franceTravailId: franceTravailId.trim() || undefined,
       fundingMethod: fundingMethod || undefined,
       funderName: funderName.trim() || undefined,
       funderSiret: funderSiret.replace(/\s/g, "") || undefined,
@@ -798,6 +801,31 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
               sert aussi aux relances convention et documents manquants (financement
               employeur).
             </p>
+          </CardContent>
+        </Card>
+
+        <Card className="dg-surface ring-0">
+          <CardHeader className="border-b border-border/50 pb-4 dark:border-white/10">
+            <CardTitle className="font-heading text-lg">
+              Identifiant France Travail
+            </CardTitle>
+            <CardDescription>
+              Numéro de dossier France Travail du candidat (ex. demandeur
+              d&apos;emploi). Utile pour les dossiers financés par France
+              Travail.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="grid gap-2 sm:max-w-md">
+              <Label htmlFor="profile-ft-id">Identifiant France Travail</Label>
+              <Input
+                id="profile-ft-id"
+                value={franceTravailId}
+                onChange={(e) => setFranceTravailId(e.target.value)}
+                placeholder="ex. 12345678901"
+                className="bg-background/80 font-mono tracking-wide"
+              />
+            </div>
           </CardContent>
         </Card>
 

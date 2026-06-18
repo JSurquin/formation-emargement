@@ -14,6 +14,7 @@ function isStudentLike(x: unknown): x is Omit<Student, "id"> {
     (o.socialSecurityNumber === undefined ||
       typeof o.socialSecurityNumber === "string") &&
     (o.dateOfBirth === undefined || typeof o.dateOfBirth === "string") &&
+    (o.franceTravailId === undefined || typeof o.franceTravailId === "string") &&
     (o.linkedConventionStudentId === undefined ||
       typeof o.linkedConventionStudentId === "string") &&
     (o.fundingMethod === undefined || typeof o.fundingMethod === "string")
@@ -49,6 +50,7 @@ export function parseStudentsJsonArray(raw: unknown): Omit<Student, "id">[] | nu
       socialSecurityNumber:
         item.socialSecurityNumber?.replace(/\s/g, "") || undefined,
       dateOfBirth: item.dateOfBirth?.trim() || undefined,
+      franceTravailId: item.franceTravailId?.trim() || undefined,
       fundingMethod: item.fundingMethod || undefined,
     });
   }
