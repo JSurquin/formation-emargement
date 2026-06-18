@@ -8,6 +8,7 @@ import {
   type HalfDay,
   type SessionTemplate,
   type Student,
+  type SessionStudentAccounting,
   type TrainingSession,
   buildAttendanceForStudents,
   emptySlot,
@@ -44,6 +45,9 @@ function cloneSession(sess: TrainingSession): TrainingSession {
     studentIds: [...sess.studentIds],
     attestationSignatures: sess.attestationSignatures
       ? { ...sess.attestationSignatures }
+      : undefined,
+    sessionAccounting: sess.sessionAccounting
+      ? { ...sess.sessionAccounting }
       : undefined,
     attendance: {
       morning: { ...sess.attendance.morning },
@@ -107,6 +111,11 @@ type FormationContextValue = {
     studentIds: string[],
     signatureDataUrl: string,
     signedByUserId?: string,
+  ) => void;
+  setSessionAccounting: (
+    sessionId: string,
+    studentId: string,
+    patch: Partial<SessionStudentAccounting>,
   ) => void;
   updateSessionNotes: (sessionId: string, notes: string) => void;
   duplicateSession: (sessionId: string) => void;
@@ -441,6 +450,10 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
             ? { ...sess.attestationSignatures }
             : undefined;
           if (attestationSignatures) delete attestationSignatures[studentId];
+          const sessionAccounting = sess.sessionAccounting
+            ? { ...sess.sessionAccounting }
+            : undefined;
+          if (sessionAccounting) delete sessionAccounting[studentId];
           return {
             ...sess,
             studentIds: sess.studentIds.filter((id) => id !== studentId),
@@ -448,6 +461,10 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
             attestationSignatures: attestationSignatures &&
               Object.keys(attestationSignatures).length
               ? attestationSignatures
+              : undefined,
+            sessionAccounting: sessionAccounting &&
+              Object.keys(sessionAccounting).length
+              ? sessionAccounting
               : undefined,
             lastActivityAt: new Date().toISOString(),
           };
@@ -830,6 +847,43 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
+  const setSessionAccounting = React.useCallback(
+    (
+      sessionId: string,
+      studentId: string,
+      patch: Partial<SessionStudentAccounting>,
+    ) => {
+      const now = new Date().toISOString();
+      setState((s) => ({
+        ...s,
+        sessions: s.sessions.map((sess) => {
+          if (sess.id !== sessionId) return sess;
+          if (!sess.studentIds.includes(studentId)) return sess;
+          const prev = sess.sessionAccounting?.[studentId] ?? {};
+          const nextEntry: SessionStudentAccounting = {
+            ...prev,
+            ...patch,
+          };
+          if (!nextEntry.invoiceSentAt) delete nextEntry.invoiceSentAt;
+          if (!nextEntry.paymentReceivedAt) delete nextEntry.paymentReceivedAt;
+          if (!nextEntry.notes?.trim()) delete nextEntry.notes;
+          const next = { ...(sess.sessionAccounting ?? {}) };
+          if (Object.keys(nextEntry).length) {
+            next[studentId] = nextEntry;
+          } else {
+            delete next[studentId];
+          }
+          return {
+            ...sess,
+            sessionAccounting: Object.keys(next).length ? next : undefined,
+            lastActivityAt: now,
+          };
+        }),
+      }));
+    },
+    [],
+  );
+
   const value = React.useMemo(
     () => ({
       state,
@@ -847,6 +901,7 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
       setPresent,
       setSignature,
       setAttestationSignatures,
+      setSessionAccounting,
       updateSessionNotes,
       duplicateSession,
       setOrganizationName,
@@ -877,6 +932,7 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
       setPresent,
       setSignature,
       setAttestationSignatures,
+      setSessionAccounting,
       updateSessionNotes,
       duplicateSession,
       setOrganizationName,

@@ -14,6 +14,7 @@ import type {
   StudentDocument,
   TrainerDocument,
   AttestationSignature,
+  SessionStudentAccounting,
   TrainingSession,
 } from "@/lib/types";
 import type { FundingMethod } from "@/lib/funding-method";
@@ -186,6 +187,28 @@ function asAttestationSignatures(
   return Object.keys(out).length ? out : undefined;
 }
 
+function asSessionAccounting(
+  value: Prisma.JsonValue | null,
+): Record<string, SessionStudentAccounting> | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const out: Record<string, SessionStudentAccounting> = {};
+  for (const [studentId, raw] of Object.entries(value)) {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) continue;
+    const entry = raw as SessionStudentAccounting;
+    if (
+      (entry.invoiceSentAt !== undefined &&
+        typeof entry.invoiceSentAt !== "string") ||
+      (entry.paymentReceivedAt !== undefined &&
+        typeof entry.paymentReceivedAt !== "string") ||
+      (entry.notes !== undefined && typeof entry.notes !== "string")
+    ) {
+      continue;
+    }
+    out[studentId] = entry;
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
 function rowToSession(row: {
   id: string;
   title: string;
@@ -199,6 +222,7 @@ function rowToSession(row: {
   trainer: string | null;
   trainerDocuments: Prisma.JsonValue | null;
   attestationSignatures: Prisma.JsonValue | null;
+  sessionAccounting: Prisma.JsonValue | null;
   createdAt: Date | null;
   lastActivityAt: Date | null;
   attendance: Prisma.JsonValue;
@@ -218,6 +242,7 @@ function rowToSession(row: {
     trainer: row.trainer ?? undefined,
     trainerDocuments: asTrainerDocuments(row.trainerDocuments),
     attestationSignatures: asAttestationSignatures(row.attestationSignatures),
+    sessionAccounting: asSessionAccounting(row.sessionAccounting),
     createdAt: row.createdAt?.toISOString(),
     lastActivityAt: row.lastActivityAt?.toISOString(),
     attendance: asAttendance(row.attendance),
@@ -356,6 +381,11 @@ export async function saveAppStateToDb(state: AppState): Promise<void> {
         Object.keys(session.attestationSignatures).length
           ? session.attestationSignatures
           : PrismaNamespace.DbNull;
+      const sessionAccounting =
+        session.sessionAccounting &&
+        Object.keys(session.sessionAccounting).length
+          ? session.sessionAccounting
+          : PrismaNamespace.DbNull;
       await tx.trainingSession.upsert({
         where: { id: session.id },
         create: {
@@ -371,6 +401,7 @@ export async function saveAppStateToDb(state: AppState): Promise<void> {
           trainer: session.trainer ?? null,
           trainerDocuments,
           attestationSignatures,
+          sessionAccounting,
           createdAt: parseIsoDate(session.createdAt),
           lastActivityAt: parseIsoDate(session.lastActivityAt),
           attendance: session.attendance,
@@ -387,6 +418,7 @@ export async function saveAppStateToDb(state: AppState): Promise<void> {
           trainer: session.trainer ?? null,
           trainerDocuments,
           attestationSignatures,
+          sessionAccounting,
           createdAt: parseIsoDate(session.createdAt),
           lastActivityAt: parseIsoDate(session.lastActivityAt),
           attendance: session.attendance,

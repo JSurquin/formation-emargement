@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useFormation } from "@/components/providers/formation-provider";
+import { AdminAccountingSection } from "@/features/admin/accounting-section";
 import { formatSiret } from "@/lib/convention-print";
 import type { Funder } from "@/lib/funder";
 
@@ -243,8 +244,10 @@ export default function AdminPage() {
       <PageHeader
         eyebrow="Administration"
         title="Back-office"
-        description="Gérez les formateurs, les financeurs et assignez les sessions de formation."
+        description="Gérez la comptabilité, les formateurs, les financeurs et assignez les sessions de formation."
       />
+
+      <AdminAccountingSection />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>

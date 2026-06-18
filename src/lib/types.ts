@@ -15,6 +15,13 @@ export type AttestationSignature = {
   signedByUserId?: string;
 };
 
+/** Suivi comptable d’un stagiaire pour une session (facture, paiement). */
+export type SessionStudentAccounting = {
+  invoiceSentAt?: string;
+  paymentReceivedAt?: string;
+  notes?: string;
+};
+
 /** Document administratif pour le formateur (ordre de mission, etc.). */
 export type TrainerDocument = {
   id: string;
@@ -91,6 +98,8 @@ export type TrainingSession = {
   trainerDocuments?: TrainerDocument[];
   /** Attestations signées par le formateur, indexées par id élève. */
   attestationSignatures?: Record<string, AttestationSignature>;
+  /** Suivi facturation / paiement par stagiaire. */
+  sessionAccounting?: Record<string, SessionStudentAccounting>;
   /** Horodatage de création (ISO). */
   createdAt?: string;
   /** Dernière modification utile (présences, signatures, méta…). */
