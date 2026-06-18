@@ -34,6 +34,18 @@ export type TrainerDocument = {
   uploadedAt: string;
 };
 
+/** Pièce jointe sur la fiche formateur (entreprise, Kbis, etc.). */
+export type TrainerProfileDocument = {
+  id: string;
+  label: string;
+  /** kbis | urssaf | insurance | other */
+  kind: "kbis" | "urssaf" | "insurance" | "other";
+  fileName: string;
+  mimeType: string;
+  dataUrl: string;
+  uploadedAt: string;
+};
+
 /** Pièce jointe sur la fiche candidat (stockée localement en data URL). */
 export type StudentDocument = {
   id: string;

@@ -4,8 +4,52 @@ import { getCurrentUser } from "@/lib/auth-session";
 import { hashPassword, isPasswordStrongEnough } from "@/lib/auth-password";
 import { sendWelcomeEmail } from "@/lib/email";
 import { ROLE_LABELS } from "@/lib/auth-types";
+import {
+  normalizeTrainerProfileInput,
+  parseTrainerProfileDocuments,
+} from "@/lib/trainer-profile";
+import type { Prisma } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
+
+function mapTrainer(row: {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+  dateOfBirth: string | null;
+  company: string | null;
+  companySiret: string | null;
+  documents: Prisma.JsonValue | null;
+  createdAt: Date;
+}) {
+  return {
+    id: row.id,
+    email: row.email,
+    firstName: row.firstName,
+    lastName: row.lastName,
+    phone: row.phone ?? undefined,
+    dateOfBirth: row.dateOfBirth ?? undefined,
+    company: row.company ?? undefined,
+    companySiret: row.companySiret ?? undefined,
+    documents: parseTrainerProfileDocuments(row.documents),
+    createdAt: row.createdAt,
+  };
+}
+
+const trainerSelect = {
+  id: true,
+  email: true,
+  firstName: true,
+  lastName: true,
+  phone: true,
+  dateOfBirth: true,
+  company: true,
+  companySiret: true,
+  documents: true,
+  createdAt: true,
+} as const;
 
 export async function GET() {
   const user = await getCurrentUser();
@@ -16,16 +60,10 @@ export async function GET() {
   const trainers = await prisma.user.findMany({
     where: { role: "FORMATEUR" },
     orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      email: true,
-      firstName: true,
-      lastName: true,
-      createdAt: true,
-    },
+    select: trainerSelect,
   });
 
-  return NextResponse.json({ trainers });
+  return NextResponse.json({ trainers: trainers.map(mapTrainer) });
 }
 
 export async function POST(request: Request) {
@@ -40,12 +78,17 @@ export async function POST(request: Request) {
       password?: string;
       firstName?: string;
       lastName?: string;
+      phone?: string;
+      dateOfBirth?: string;
+      company?: string;
+      companySiret?: string;
     };
 
     const email = body.email?.trim().toLowerCase();
     const password = body.password ?? "";
     const firstName = body.firstName?.trim();
     const lastName = body.lastName?.trim();
+    const profile = normalizeTrainerProfileInput(body);
 
     if (!email || !password || !firstName || !lastName) {
       return NextResponse.json(
@@ -77,14 +120,12 @@ export async function POST(request: Request) {
         firstName,
         lastName,
         role: "FORMATEUR",
+        phone: profile.phone ?? null,
+        dateOfBirth: profile.dateOfBirth ?? null,
+        company: profile.company ?? null,
+        companySiret: profile.companySiret ?? null,
       },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        createdAt: true,
-      },
+      select: trainerSelect,
     });
 
     const loginUrl = `${process.env.APP_URL ?? "http://localhost:3000"}/login`;
@@ -95,7 +136,7 @@ export async function POST(request: Request) {
       loginUrl,
     }).catch((err) => console.error("welcome email failed:", err));
 
-    return NextResponse.json({ trainer });
+    return NextResponse.json({ trainer: mapTrainer(trainer) });
   } catch (error) {
     console.error("POST /api/admin/trainers failed:", error);
     return NextResponse.json(

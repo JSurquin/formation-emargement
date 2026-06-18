@@ -75,6 +75,11 @@ model User {
   firstName    String
   lastName     String
   role         UserRole
+  phone        String?
+  dateOfBirth  String?
+  company      String?
+  companySiret String?
+  documents    Json?
   studentId    String?          @unique
   student      Student?         @relation(fields: [studentId], references: [id], onDelete: SetNull)
   createdAt    DateTime         @default(now())
