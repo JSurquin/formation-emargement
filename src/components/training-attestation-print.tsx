@@ -1,6 +1,7 @@
 "use client";
 
 import type { Student, TrainingSession } from "@/lib/types";
+import { getFundingMethodLabel } from "@/lib/funding-method";
 import {
   buildAttestationDurationLabel,
   formatAttestationIssueDate,
@@ -63,6 +64,13 @@ export function TrainingAttestationPrint({
               {student.company?.trim() ? (
                 <p className="text-center text-sm text-neutral-700">
                   Structure : {student.company.trim()}
+                </p>
+              ) : null}
+
+              {student.fundingMethod ? (
+                <p className="text-center text-sm text-neutral-700">
+                  Moyen de financement :{" "}
+                  {getFundingMethodLabel(student.fundingMethod)}
                 </p>
               ) : null}
 

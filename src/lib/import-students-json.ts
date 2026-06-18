@@ -12,7 +12,8 @@ function isStudentLike(x: unknown): x is Omit<Student, "id"> {
     (o.phone === undefined || typeof o.phone === "string") &&
     (o.company === undefined || typeof o.company === "string") &&
     (o.socialSecurityNumber === undefined ||
-      typeof o.socialSecurityNumber === "string")
+      typeof o.socialSecurityNumber === "string") &&
+    (o.fundingMethod === undefined || typeof o.fundingMethod === "string")
   );
 }
 
@@ -44,6 +45,7 @@ export function parseStudentsJsonArray(raw: unknown): Omit<Student, "id">[] | nu
       company: item.company?.trim() || undefined,
       socialSecurityNumber:
         item.socialSecurityNumber?.replace(/\s/g, "") || undefined,
+      fundingMethod: item.fundingMethod || undefined,
     });
   }
   return out.length ? out : null;

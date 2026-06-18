@@ -22,15 +22,18 @@ model AppMeta {
 }
 
 model Student {
-  id        String   @id
-  firstName String
-  lastName  String
-  email     String?
-  phone     String?
-  company   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user      User?
+  id                   String   @id
+  firstName            String
+  lastName             String
+  email                String?
+  phone                String?
+  company              String?
+  socialSecurityNumber String?
+  fundingMethod        String?
+  documents            Json?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  user                 User?
 }
 
 model TrainingSession {

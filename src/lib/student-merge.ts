@@ -25,6 +25,8 @@ export function mergeStudentsIntoLocal(
           s.socialSecurityNumber !== undefined
             ? s.socialSecurityNumber
             : cur.socialSecurityNumber,
+        fundingMethod:
+          s.fundingMethod !== undefined ? s.fundingMethod : cur.fundingMethod,
         documents: s.documents !== undefined ? s.documents : cur.documents,
       });
     } else {

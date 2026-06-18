@@ -25,6 +25,7 @@ export function filterStudentsByQuery(
         s.phone ?? "",
         s.company ?? "",
         s.socialSecurityNumber ?? "",
+        s.fundingMethod ?? "",
         `${s.firstName} ${s.lastName}`,
       ].join(" "),
     );

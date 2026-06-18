@@ -1,6 +1,7 @@
 "use client";
 
 import type { HalfDay, Student, TrainingSession } from "@/lib/types";
+import { getFundingMethodLabel } from "@/lib/funding-method";
 
 const HALF_LABELS: Record<HalfDay, string> = {
   morning: "Matin",
@@ -64,6 +65,9 @@ export function SessionPrintSummary({
                 <th className="border border-black px-2 py-2 text-left font-semibold">
                   Élève
                 </th>
+                <th className="border border-black px-2 py-2 text-left text-xs font-semibold">
+                  Financement
+                </th>
                 <th className="border border-black px-2 py-2 text-center font-semibold">
                   Présent
                 </th>
@@ -79,7 +83,7 @@ export function SessionPrintSummary({
               {students.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={5}
                     className="border border-black px-2 py-6 text-center text-neutral-600"
                   >
                     Aucun participant sur cette feuille.
@@ -96,6 +100,9 @@ export function SessionPrintSummary({
                     <tr key={`${half}-${st.id}`}>
                       <td className="border border-black px-2 py-2 font-medium">
                         {st.firstName} {st.lastName}
+                      </td>
+                      <td className="border border-black px-2 py-2 text-xs text-neutral-700">
+                        {getFundingMethodLabel(st.fundingMethod) ?? "—"}
                       </td>
                       <td className="border border-black px-2 py-2 text-center">
                         {slot.present ? "Oui" : "Non"}

@@ -180,4 +180,14 @@
   [data-print-mode="emargement"] .print-attestation-only {
     display: none !important;
   }
+  [data-profile-print-mode="convention"] .print-profile-recap {
+    display: none !important;
+  }
+  [data-profile-print-mode="recap"] .print-profile-convention {
+    display: none !important;
+  }
+  [data-profile-print-mode="none"] .print-profile-convention,
+  [data-profile-print-mode="none"] .print-profile-recap {
+    display: none !important;
+  }
 }

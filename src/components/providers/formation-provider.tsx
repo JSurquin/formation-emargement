@@ -227,6 +227,7 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
           company: input.company?.trim() || undefined,
           socialSecurityNumber:
             input.socialSecurityNumber?.replace(/\s/g, "") || undefined,
+          fundingMethod: input.fundingMethod || undefined,
           documents: input.documents?.length ? input.documents : undefined,
         },
       ],
@@ -253,6 +254,8 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
           if (patch.socialSecurityNumber !== undefined)
             next.socialSecurityNumber =
               patch.socialSecurityNumber.replace(/\s/g, "") || undefined;
+          if (patch.fundingMethod !== undefined)
+            next.fundingMethod = patch.fundingMethod || undefined;
           if (patch.documents !== undefined)
             next.documents = patch.documents.length ? patch.documents : undefined;
           return next;
@@ -316,6 +319,7 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
         firstName: orig.firstName.trim(),
         lastName: `${orig.lastName.trim()} (copie)`,
         socialSecurityNumber: undefined,
+        fundingMethod: undefined,
         documents: undefined,
       };
       return { ...s, students: [...s.students, dup] };

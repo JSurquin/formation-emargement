@@ -1,3 +1,5 @@
+import type { FundingMethod } from "./funding-method";
+
 export type HalfDay = "morning" | "afternoon";
 
 export type AttendanceSlot = {
@@ -29,6 +31,8 @@ export type Student = {
   company?: string;
   /** Numéro de sécurité sociale (NIR) — requis à la création, utile CPF / Heliopie. */
   socialSecurityNumber?: string;
+  /** Moyen de financement (CPF, OPCO, employeur…) — convention & dossiers. */
+  fundingMethod?: FundingMethod;
   /** Justificatifs d'inscription (carte d'identité, etc.). */
   documents?: StudentDocument[];
 };

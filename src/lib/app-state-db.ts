@@ -11,8 +11,11 @@ import type {
   AttendanceSlot,
   SessionTemplate,
   Student,
+  StudentDocument,
   TrainingSession,
 } from "@/lib/types";
+import type { FundingMethod } from "@/lib/funding-method";
+import { isFundingMethod } from "@/lib/funding-method";
 
 function asStringArray(value: Prisma.JsonValue): string[] {
   if (!Array.isArray(value)) return [];
@@ -79,6 +82,27 @@ function asAttendance(value: Prisma.JsonValue): TrainingSession["attendance"] {
   return { morning, afternoon };
 }
 
+function asStudentDocuments(value: Prisma.JsonValue | null): StudentDocument[] | undefined {
+  if (!Array.isArray(value) || !value.length) return undefined;
+  const out: StudentDocument[] = [];
+  for (const item of value) {
+    if (
+      item &&
+      typeof item === "object" &&
+      !Array.isArray(item) &&
+      typeof (item as StudentDocument).id === "string" &&
+      typeof (item as StudentDocument).label === "string" &&
+      typeof (item as StudentDocument).fileName === "string" &&
+      typeof (item as StudentDocument).mimeType === "string" &&
+      typeof (item as StudentDocument).dataUrl === "string" &&
+      typeof (item as StudentDocument).uploadedAt === "string"
+    ) {
+      out.push(item as StudentDocument);
+    }
+  }
+  return out.length ? out : undefined;
+}
+
 function rowToStudent(row: {
   id: string;
   firstName: string;
@@ -86,6 +110,9 @@ function rowToStudent(row: {
   email: string | null;
   phone: string | null;
   company: string | null;
+  socialSecurityNumber: string | null;
+  fundingMethod: string | null;
+  documents: Prisma.JsonValue | null;
 }): Student {
   return {
     id: row.id,
@@ -94,6 +121,11 @@ function rowToStudent(row: {
     email: row.email ?? undefined,
     phone: row.phone ?? undefined,
     company: row.company ?? undefined,
+    socialSecurityNumber: row.socialSecurityNumber ?? undefined,
+    fundingMethod: isFundingMethod(row.fundingMethod ?? "")
+      ? (row.fundingMethod as FundingMethod)
+      : undefined,
+    documents: asStudentDocuments(row.documents),
   };
 }
 
@@ -211,6 +243,8 @@ export async function saveAppStateToDb(state: AppState): Promise<void> {
     }
 
     for (const student of normalized.students) {
+      const documents =
+        student.documents?.length ? student.documents : PrismaNamespace.DbNull;
       await tx.student.upsert({
         where: { id: student.id },
         create: {
@@ -220,6 +254,9 @@ export async function saveAppStateToDb(state: AppState): Promise<void> {
           email: student.email ?? null,
           phone: student.phone ?? null,
           company: student.company ?? null,
+          socialSecurityNumber: student.socialSecurityNumber ?? null,
+          fundingMethod: student.fundingMethod ?? null,
+          documents,
         },
         update: {
           firstName: student.firstName,
@@ -227,6 +264,9 @@ export async function saveAppStateToDb(state: AppState): Promise<void> {
           email: student.email ?? null,
           phone: student.phone ?? null,
           company: student.company ?? null,
+          socialSecurityNumber: student.socialSecurityNumber ?? null,
+          fundingMethod: student.fundingMethod ?? null,
+          documents,
         },
       });
     }

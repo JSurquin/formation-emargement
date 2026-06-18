@@ -1,5 +1,6 @@
 import type { StudentAttendanceRow } from "./student-aggregates";
 import type { Student, TrainingSession } from "./types";
+import { getFundingMethodLabel } from "./funding-method";
 
 function csvCell(s: string) {
   const t = s.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
@@ -18,7 +19,15 @@ function downloadText(content: string, filename: string, mime: string) {
 }
 
 export function exportStudentsCsv(students: Student[], filename: string) {
-  const header = ["Prénom", "Nom", "E-mail", "Téléphone", "Structure", "N° sécu. sociale"]
+  const header = [
+    "Prénom",
+    "Nom",
+    "E-mail",
+    "Téléphone",
+    "Structure",
+    "N° sécu. sociale",
+    "Moyen de financement",
+  ]
     .map(csvCell)
     .join(";");
   const rows = students.map((s) =>
@@ -29,6 +38,7 @@ export function exportStudentsCsv(students: Student[], filename: string) {
       s.phone ?? "",
       s.company ?? "",
       s.socialSecurityNumber ?? "",
+      getFundingMethodLabel(s.fundingMethod) ?? "",
     ]
       .map(csvCell)
       .join(";"),

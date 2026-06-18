@@ -10,6 +10,7 @@ import {
   ExternalLink,
   FileText,
   IdCard,
+  Printer,
   Trash2,
   Upload,
 } from "lucide-react";
@@ -42,6 +43,11 @@ import {
   validateStudentRequiredFields,
 } from "@/lib/student-profile";
 import { cn } from "@/lib/utils";
+import { FUNDING_METHOD_OPTIONS, type FundingMethod } from "@/lib/funding-method";
+import {
+  StudentProfilePrint,
+  type StudentProfilePrintMode,
+} from "@/components/student-profile-print";
 
 import type { StudentDocument } from "@/lib/types";
 
@@ -55,6 +61,8 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
   const { state, hydrated, updateStudent } = useFormation();
   const student = state.students.find((s) => s.id === studentId);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [profilePrintMode, setProfilePrintMode] =
+    React.useState<StudentProfilePrintMode | null>(null);
 
   const [firstName, setFirstName] = React.useState("");
   const [lastName, setLastName] = React.useState("");
@@ -62,6 +70,9 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
   const [phone, setPhone] = React.useState("");
   const [company, setCompany] = React.useState("");
   const [socialSecurityNumber, setSocialSecurityNumber] = React.useState("");
+  const [fundingMethod, setFundingMethod] = React.useState<
+    FundingMethod | ""
+  >("");
   const [docKind, setDocKind] =
     React.useState<(typeof DOCUMENT_PRESETS)[number]["value"]>("identity");
   const [docLabel, setDocLabel] = React.useState("");
@@ -78,7 +89,28 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
         ? formatSocialSecurityNumber(student.socialSecurityNumber)
         : "",
     );
+    setFundingMethod(student.fundingMethod ?? "");
   }, [student]);
+
+  React.useEffect(() => {
+    if (!profilePrintMode) return;
+    const reset = () => setProfilePrintMode(null);
+    window.addEventListener("afterprint", reset);
+    const t = window.setTimeout(() => window.print(), 80);
+    return () => {
+      window.removeEventListener("afterprint", reset);
+      window.clearTimeout(t);
+    };
+  }, [profilePrintMode]);
+
+  const triggerProfilePrint = (mode: StudentProfilePrintMode) => {
+    setProfilePrintMode(mode);
+    toast.success(
+      mode === "convention"
+        ? "Convention prête — choisissez « Enregistrer en PDF » dans la fenêtre d'impression si besoin."
+        : "Fiche récapitulative prête — choisissez « Enregistrer en PDF » dans la fenêtre d'impression si besoin.",
+    );
+  };
 
   const sessionCount = React.useMemo(
     () => countSessionsPerStudent(state.sessions).get(studentId) ?? 0,
@@ -105,6 +137,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
       phone: phone.trim() || undefined,
       company: company.trim() || undefined,
       socialSecurityNumber: socialSecurityNumber.replace(/\s/g, ""),
+      fundingMethod: fundingMethod || undefined,
     });
     toast.success("Fiche candidat enregistrée.");
   };
@@ -193,7 +226,10 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
   const profileComplete = isStudentProfileComplete(student);
 
   return (
-    <div className="space-y-10">
+    <div
+      className="space-y-10"
+      data-profile-print-mode={profilePrintMode ?? "none"}
+    >
       <PageHeader
         eyebrow="Fiche candidat"
         title={
@@ -209,7 +245,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
             ) : null}
           </>
         }
-        description={`Coordonnées, numéro de sécurité sociale (CPF / Heliopie) et justificatifs d'inscription. Présent sur ${sessionCount} feuille${sessionCount > 1 ? "s" : ""}.`}
+        description={`Coordonnées, financement, numéro de sécurité sociale (CPF / Heliopie) et justificatifs d'inscription. Présent sur ${sessionCount} feuille${sessionCount > 1 ? "s" : ""}.`}
         actions={
           <Link
             href="/eleves"
@@ -308,6 +344,60 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
                 className="bg-background/80"
               />
             </div>
+            <div className="grid gap-2 sm:col-span-2">
+              <Label htmlFor="profile-funding">Moyen de financement</Label>
+              <Select
+                value={fundingMethod || "none"}
+                onValueChange={(v) =>
+                  setFundingMethod(v === "none" ? "" : (v as FundingMethod))
+                }
+              >
+                <SelectTrigger id="profile-funding" className="bg-background/80">
+                  <SelectValue placeholder="Choisir un financement" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Non renseigné</SelectItem>
+                  {FUNDING_METHOD_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="dg-surface ring-0">
+          <CardHeader className="border-b border-border/50 pb-4 dark:border-white/10">
+            <CardTitle className="flex items-center gap-2 font-heading text-lg">
+              <Printer className="size-5 text-indigo-600 dark:text-violet-300" />
+              Documents administratifs
+            </CardTitle>
+            <CardDescription>
+              Imprimez la convention de formation ou la fiche récapitulative avec
+              le moyen de financement du candidat.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-3 pt-6">
+            <Button
+              type="button"
+              variant="outline"
+              className="gap-2 rounded-full"
+              onClick={() => triggerProfilePrint("convention")}
+            >
+              <Printer className="size-4" />
+              Convention de formation
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="gap-2 rounded-full"
+              onClick={() => triggerProfilePrint("recap")}
+            >
+              <Printer className="size-4" />
+              Fiche récapitulative
+            </Button>
           </CardContent>
         </Card>
 
@@ -454,6 +544,14 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
           </Button>
         </div>
       </form>
+
+      {profilePrintMode ? (
+        <StudentProfilePrint
+          mode={profilePrintMode}
+          organizationName={state.organizationName}
+          student={student}
+        />
+      ) : null}
     </div>
   );
 }

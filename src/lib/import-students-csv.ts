@@ -1,4 +1,5 @@
 import type { Student } from "./types";
+import { normalizeFundingMethodFromImport } from "./funding-method";
 
 function splitCsvLine(line: string): string[] {
   const out: string[] = [];
@@ -91,6 +92,12 @@ export function parseStudentsCsv(text: string): ParsedStudentRow[] | null {
     "securite sociale",
     "social security",
   ]);
+  const iFunding = pickColumn(headers, [
+    "financement",
+    "moyen financement",
+    "moyen de financement",
+    "funding",
+  ]);
 
   const out: ParsedStudentRow[] = [];
   for (let r = 1; r < lines.length; r++) {
@@ -114,6 +121,10 @@ export function parseStudentsCsv(text: string): ParsedStudentRow[] | null {
     if (iSsn >= 0) {
       const ssn = (cells[iSsn] ?? "").replace(/\s/g, "");
       if (ssn) row.socialSecurityNumber = ssn;
+    }
+    if (iFunding >= 0) {
+      const funding = normalizeFundingMethodFromImport(cells[iFunding] ?? "");
+      if (funding) row.fundingMethod = funding;
     }
     out.push(row);
   }
