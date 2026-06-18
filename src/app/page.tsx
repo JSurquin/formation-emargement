@@ -35,10 +35,6 @@ import { NewSessionDialog } from "@/features/home/new-session-dialog";
 import { SessionListToolbar } from "@/features/home/session-list-toolbar";
 import { HomeSessionCard } from "@/features/home/home-session-card";
 import { RecentSessionsStrip } from "@/features/home/recent-sessions-strip";
-import {
-  postponeBackupNudge,
-  shouldShowBackupNudge,
-} from "@/lib/backup-nudge";
 import { toast } from "sonner";
 
 export default function HomePage() {
@@ -102,34 +98,6 @@ export default function HomePage() {
   );
 
   useSlashFocus("session-search", hydrated);
-
-  const hasExportableData =
-    state.sessions.length > 0 || state.students.length > 0;
-
-  React.useEffect(() => {
-    if (!hydrated || !hasExportableData) return;
-    if (!shouldShowBackupNudge()) return;
-    const t = window.setTimeout(() => {
-      toast.message("Sauvegarde locale", {
-        id: "digiforma-backup-nudge",
-        description:
-          "Rien n’est envoyé sur un serveur : exportez un JSON de temps en temps pour ne rien perdre.",
-        duration: 14_000,
-        action: {
-          label: "Aller à l’export",
-          onClick: () => {
-            postponeBackupNudge();
-            document
-              .getElementById("sauvegarde-donnees")
-              ?.scrollIntoView({ behavior: "smooth", block: "start" });
-          },
-        },
-        onDismiss: () => postponeBackupNudge(),
-        onAutoClose: () => postponeBackupNudge(),
-      });
-    }, 1600);
-    return () => window.clearTimeout(t);
-  }, [hydrated, hasExportableData]);
 
   if (!hydrated) {
     return (

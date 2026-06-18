@@ -26,10 +26,6 @@ import {
   saveEmergencySnapshot,
 } from "@/lib/emergency-snapshot";
 import { exportSessionsInventoryCsv } from "@/lib/export-csv";
-import {
-  formatStorageSize,
-  getFormationStorageByteSize,
-} from "@/lib/formation-storage-size";
 import { postponeBackupNudge } from "@/lib/backup-nudge";
 
 export function OrganismeSaveCard() {
@@ -82,7 +78,7 @@ export function OrganismeSaveCard() {
         const ok = await confirm({
           title: "Remplacer toutes les données ?",
           description:
-            "Les élèves et sessions locaux seront remplacés par ce fichier.",
+            "Les élèves et sessions actuels seront remplacés par ce fichier.",
           confirmLabel: "Remplacer",
           variant: "destructive",
         });
@@ -115,7 +111,7 @@ export function OrganismeSaveCard() {
           return;
         }
         const ok = await confirm({
-          title: "Fusionner avec les données locales ?",
+          title: "Fusionner avec les données existantes ?",
           description:
             "Les élèves existants (même id) seront mis à jour ; les sessions en conflit d’id seront dupliquées avec le suffixe « (import) ».",
           confirmLabel: "Fusionner",
@@ -203,20 +199,11 @@ export function OrganismeSaveCard() {
           Organisme & sauvegarde
         </CardTitle>
         <CardDescription>
-          Sans base de données : tout reste dans le navigateur. Remplacer efface
-          tout ; fusionner combine les exports (sessions en conflit
-          d’identifiant sont dupliquées). Vous pouvez aussi importer un fichier
-          JSON « une session » exporté depuis une feuille.
+          Nom de l’organisme, export et import JSON. Remplacer efface tout ;
+          fusionner combine les exports (sessions en conflit d’identifiant sont
+          dupliquées). Vous pouvez aussi importer un fichier JSON « une session »
+          exporté depuis une feuille.
         </CardDescription>
-        {hydrated ? (
-          <p className="text-xs text-muted-foreground">
-            Espace local approximatif :{" "}
-            <span className="font-mono tabular-nums">
-              {formatStorageSize(getFormationStorageByteSize())}
-            </span>{" "}
-            (sauvegarde JSON dans ce navigateur).
-          </p>
-        ) : null}
       </CardHeader>
       <CardContent className="flex flex-col gap-4 pt-6 sm:flex-row sm:flex-wrap sm:items-end">
         <div className="grid min-w-[200px] flex-1 gap-2">

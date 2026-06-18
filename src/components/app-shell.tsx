@@ -116,8 +116,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <footer className="no-print relative z-10 border-t border-border/60 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] text-center text-xs leading-relaxed text-muted-foreground dark:border-white/10 sm:py-8">
         <p className="mx-auto max-w-lg pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))]">
-          Démo locale — données dans le navigateur (localStorage). Inspiré des
-          usages type{" "}
+          Feuilles de présence et signatures numériques — inspiré des usages type{" "}
           <a
             href="https://www.digiforma.com/solution-emargement-numerique/"
             className="font-medium text-indigo-600 underline decoration-indigo-600/30 underline-offset-2 transition-colors hover:text-violet-600 dark:text-violet-300 dark:decoration-violet-400/40 dark:hover:text-fuchsia-300"

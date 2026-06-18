@@ -59,7 +59,58 @@ export function loadAppState(): AppState {
 
 export type SaveAppStateResult =
   | { ok: true }
-  | { ok: false; reason: "quota" | "unknown" };
+  | { ok: false; reason: "quota" | "network" | "unknown" };
+
+export async function loadAppStateFromApi(): Promise<
+  AppState | { error: "network" | "unknown" }
+> {
+  try {
+    const res = await fetch("/api/app-state", { cache: "no-store" });
+    if (!res.ok) return { error: "unknown" };
+    const parsed = (await res.json()) as AppState;
+    if (!parsed.students || !parsed.sessions) return { error: "unknown" };
+    const merged: AppState = {
+      ...defaultAppState,
+      ...parsed,
+      organizationName: parsed.organizationName ?? "",
+      noteSnippets: Array.isArray(parsed.noteSnippets)
+        ? parsed.noteSnippets.filter((x) => typeof x === "string")
+        : [],
+      sessionTemplates: normalizeTemplates(parsed.sessionTemplates),
+    };
+    return migrateAppState(merged);
+  } catch {
+    return { error: "network" };
+  }
+}
+
+export async function saveAppStateToApi(
+  state: AppState,
+): Promise<SaveAppStateResult> {
+  const toSave: AppState = {
+    ...state,
+    schemaVersion: APP_STATE_SCHEMA_VERSION,
+  };
+  try {
+    const res = await fetch("/api/app-state", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(toSave),
+    });
+    if (!res.ok) return { ok: false, reason: "unknown" };
+    return { ok: true };
+  } catch {
+    return { ok: false, reason: "network" };
+  }
+}
+
+export function isEmptyAppState(state: AppState): boolean {
+  return (
+    state.students.length === 0 &&
+    state.sessions.length === 0 &&
+    !(state.organizationName ?? "").trim()
+  );
+}
 
 export function saveAppState(state: AppState): SaveAppStateResult {
   if (typeof window === "undefined") return { ok: true };

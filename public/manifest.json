@@ -1,7 +1,7 @@
 {
   "name": "Formation Émargement",
   "short_name": "Émargement",
-  "description": "Feuilles de présence et signatures — données locales",
+  "description": "Feuilles de présence et signatures numériques",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#fafafa",

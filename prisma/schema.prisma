@@ -1,0 +1,44 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model AppMeta {
+  id               String   @id @default("default")
+  schemaVersion    Int      @default(1)
+  organizationName String   @default("")
+  noteSnippets     Json     @default("[]")
+  sessionTemplates Json     @default("[]")
+  updatedAt        DateTime @updatedAt
+}
+
+model Student {
+  id        String   @id
+  firstName String
+  lastName  String
+  email     String?
+  phone     String?
+  company   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TrainingSession {
+  id             String    @id
+  title          String
+  date           String
+  studentIds     Json
+  notes          String?
+  tags           Json?
+  favorited      Boolean   @default(false)
+  archived       Boolean   @default(false)
+  location       String?
+  trainer        String?
+  createdAt      DateTime?
+  lastActivityAt DateTime?
+  attendance     Json
+  updatedAt      DateTime  @updatedAt
+}

@@ -71,7 +71,7 @@ export default function StatistiquesPage() {
             <GradientAccent>Signatures</GradientAccent> par élève
           </>
         }
-        description="Pour chaque fiche annuaire : nombre de sessions où l’élève figure, créneaux signés sur les créneaux possibles (2 par session : matin et après-midi). Données locales uniquement."
+        description="Pour chaque fiche annuaire : nombre de sessions où l’élève figure, créneaux signés sur les créneaux possibles (2 par session : matin et après-midi)."
         actions={
           <div className="flex w-full flex-wrap gap-2 sm:w-auto">
             <Button

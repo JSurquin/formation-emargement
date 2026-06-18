@@ -16,8 +16,11 @@ import { migrateAppState } from "@/lib/app-state-migrate";
 import { newId } from "@/lib/id";
 import {
   defaultAppState,
+  FORMATION_STORAGE_KEY,
+  isEmptyAppState,
   loadAppState,
-  saveAppState,
+  loadAppStateFromApi,
+  saveAppStateToApi,
 } from "@/lib/formation-storage";
 import type { SessionJsonBundle } from "@/lib/export-session-json";
 import { mergeSessionBundleIntoState } from "@/lib/merge-session-bundle";
@@ -126,29 +129,58 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
   const stateRef = React.useRef(state);
   stateRef.current = state;
 
-  const persist = React.useCallback(() => {
-    const result = saveAppState(stateRef.current);
+  const persist = React.useCallback(async () => {
+    const result = await saveAppStateToApi(stateRef.current);
     if (result.ok) {
       saveErrorToastRef.current = false;
       return;
     }
     if (saveErrorToastRef.current) return;
     saveErrorToastRef.current = true;
-    if (result.reason === "quota") {
+    if (result.reason === "network") {
       toast.error(
-        "Espace de stockage du navigateur saturé. Exportez vos données ou réduisez les signatures en image.",
+        "Connexion au serveur impossible. Vérifiez votre réseau puis réessayez.",
         { duration: 10_000 },
       );
     } else {
-      toast.error("Impossible d’enregistrer les données localement.", {
+      toast.error("Impossible d’enregistrer les données sur le serveur.", {
         duration: 8000,
       });
     }
   }, []);
 
   React.useEffect(() => {
-    setState(loadAppState());
-    setHydrated(true);
+    let cancelled = false;
+    void (async () => {
+      const remote = await loadAppStateFromApi();
+      if (cancelled) return;
+      if ("error" in remote) {
+        toast.error(
+          "Impossible de charger les données depuis le serveur. Réessayez en rafraîchissant la page.",
+          { duration: 10_000 },
+        );
+        setHydrated(true);
+        return;
+      }
+      if (isEmptyAppState(remote)) {
+        const local = loadAppState();
+        if (!isEmptyAppState(local)) {
+          setState(local);
+          setHydrated(true);
+          const migrated = await saveAppStateToApi(local);
+          if (migrated.ok) {
+            localStorage.removeItem(FORMATION_STORAGE_KEY);
+            toast.success("Vos données locales ont été transférées sur le serveur.");
+          }
+          return;
+        }
+      }
+      setState(remote);
+      setHydrated(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   React.useEffect(() => {
