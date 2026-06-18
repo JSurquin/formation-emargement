@@ -228,6 +228,8 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
           socialSecurityNumber:
             input.socialSecurityNumber?.replace(/\s/g, "") || undefined,
           fundingMethod: input.fundingMethod || undefined,
+          funderName: input.funderName?.trim() || undefined,
+          funderSiret: input.funderSiret?.replace(/\s/g, "") || undefined,
           funderEmail: input.funderEmail?.trim() || undefined,
           conventionSignedAt: input.conventionSignedAt || undefined,
           presenceConfirmedForSessionId:
@@ -260,6 +262,10 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
               patch.socialSecurityNumber.replace(/\s/g, "") || undefined;
           if (patch.fundingMethod !== undefined)
             next.fundingMethod = patch.fundingMethod || undefined;
+          if (patch.funderName !== undefined)
+            next.funderName = patch.funderName.trim() || undefined;
+          if (patch.funderSiret !== undefined)
+            next.funderSiret = patch.funderSiret.replace(/\s/g, "") || undefined;
           if (patch.funderEmail !== undefined)
             next.funderEmail = patch.funderEmail.trim() || undefined;
           if (patch.conventionSignedAt !== undefined)
@@ -331,6 +337,8 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
         lastName: `${orig.lastName.trim()} (copie)`,
         socialSecurityNumber: undefined,
         fundingMethod: undefined,
+        funderName: undefined,
+        funderSiret: undefined,
         funderEmail: undefined,
         conventionSignedAt: undefined,
         presenceConfirmedForSessionId: undefined,

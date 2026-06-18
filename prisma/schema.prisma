@@ -30,6 +30,8 @@ model Student {
   company              String?
   socialSecurityNumber String?
   fundingMethod        String?
+  funderName           String?
+  funderSiret          String?
   funderEmail          String?
   conventionSignedAt   String?
   presenceConfirmedForSessionId String?

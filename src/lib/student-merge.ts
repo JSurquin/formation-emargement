@@ -27,6 +27,10 @@ export function mergeStudentsIntoLocal(
             : cur.socialSecurityNumber,
         fundingMethod:
           s.fundingMethod !== undefined ? s.fundingMethod : cur.fundingMethod,
+        funderName:
+          s.funderName !== undefined ? s.funderName : cur.funderName,
+        funderSiret:
+          s.funderSiret !== undefined ? s.funderSiret : cur.funderSiret,
         funderEmail:
           s.funderEmail !== undefined ? s.funderEmail : cur.funderEmail,
         conventionSignedAt:

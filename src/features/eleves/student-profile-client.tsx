@@ -67,6 +67,7 @@ import {
   type StudentProfilePrintMode,
 } from "@/components/student-profile-print";
 
+import { formatSiret } from "@/lib/convention-print";
 import type { StudentDocument } from "@/lib/types";
 
 const DOCUMENT_PRESETS = [
@@ -91,6 +92,8 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
   const [fundingMethod, setFundingMethod] = React.useState<
     FundingMethod | ""
   >("");
+  const [funderName, setFunderName] = React.useState("");
+  const [funderSiret, setFunderSiret] = React.useState("");
   const [funderEmail, setFunderEmail] = React.useState("");
   const [sendingReminder, setSendingReminder] =
     React.useState<ReminderKind | null>(null);
@@ -111,6 +114,10 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
         : "",
     );
     setFundingMethod(student.fundingMethod ?? "");
+    setFunderName(student.funderName ?? "");
+    setFunderSiret(
+      student.funderSiret ? formatSiret(student.funderSiret) : "",
+    );
     setFunderEmail(student.funderEmail ?? "");
   }, [student]);
 
@@ -143,6 +150,12 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
     if (!student) return null;
     return getStudentFollowUp(student, state.sessions);
   }, [student, state.sessions]);
+
+  const conventionSessionStudents = React.useMemo(() => {
+    if (!followUp?.upcomingSession) return [];
+    const ids = new Set(followUp.upcomingSession.studentIds);
+    return state.students.filter((s) => ids.has(s.id));
+  }, [followUp?.upcomingSession, state.students]);
 
   const sendReminder = async (kind: ReminderKind) => {
     if (!student) return;
@@ -277,6 +290,8 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
       company: company.trim() || undefined,
       socialSecurityNumber: socialSecurityNumber.replace(/\s/g, ""),
       fundingMethod: fundingMethod || undefined,
+      funderName: funderName.trim() || undefined,
+      funderSiret: funderSiret.replace(/\s/g, "") || undefined,
       funderEmail: funderEmail.trim() || undefined,
     });
     toast.success("Fiche candidat enregistrée.");
@@ -506,6 +521,27 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
               </Select>
             </div>
             <div className="grid gap-2 sm:col-span-2">
+              <Label htmlFor="profile-funder-name">Nom du financeur</Label>
+              <Input
+                id="profile-funder-name"
+                value={funderName}
+                onChange={(e) => setFunderName(e.target.value)}
+                placeholder="ex. OPCO Atlas, Entreprise XYZ"
+                className="bg-background/80"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="profile-funder-siret">N° SIRET du financeur</Label>
+              <Input
+                id="profile-funder-siret"
+                value={funderSiret}
+                onChange={(e) => setFunderSiret(e.target.value)}
+                placeholder="ex. 123 456 789 00012"
+                inputMode="numeric"
+                className="bg-background/80 font-mono tracking-wide"
+              />
+            </div>
+            <div className="grid gap-2">
               <Label htmlFor="profile-funder-em">E-mail du financeur</Label>
               <Input
                 id="profile-funder-em"
@@ -515,10 +551,11 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
                 placeholder="ex. contact@opco.fr"
                 className="bg-background/80"
               />
-              <p className="text-xs text-muted-foreground">
-                Utilisé pour la relance automatique si la convention n&apos;est pas signée.
-              </p>
             </div>
+            <p className="text-xs text-muted-foreground sm:col-span-2">
+              Ces informations apparaissent sur la convention imprimée. L&apos;e-mail
+              sert aussi à la relance si la convention n&apos;est pas signée.
+            </p>
           </CardContent>
         </Card>
 
@@ -937,6 +974,8 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
           mode={profilePrintMode}
           organizationName={state.organizationName}
           student={student}
+          session={followUp?.upcomingSession}
+          sessionStudents={conventionSessionStudents}
         />
       ) : null}
     </div>

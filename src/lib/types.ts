@@ -33,6 +33,10 @@ export type Student = {
   socialSecurityNumber?: string;
   /** Moyen de financement (CPF, OPCO, employeur…) — convention & dossiers. */
   fundingMethod?: FundingMethod;
+  /** Nom du financeur (OPCO, employeur…) — convention. */
+  funderName?: string;
+  /** N° SIRET du financeur — convention. */
+  funderSiret?: string;
   /** E-mail du financeur (OPCO, employeur…) pour les relances convention. */
   funderEmail?: string;
   /** Date de signature de la convention (ISO). */

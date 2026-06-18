@@ -45,6 +45,8 @@ function rowToStudent(row: {
   company: string | null;
   socialSecurityNumber: string | null;
   fundingMethod: string | null;
+  funderName: string | null;
+  funderSiret: string | null;
   funderEmail: string | null;
   conventionSignedAt: string | null;
   presenceConfirmedForSessionId: string | null;
@@ -61,6 +63,8 @@ function rowToStudent(row: {
     fundingMethod: isFundingMethod(row.fundingMethod ?? "")
       ? (row.fundingMethod as FundingMethod)
       : undefined,
+    funderName: row.funderName ?? undefined,
+    funderSiret: row.funderSiret ?? undefined,
     funderEmail: row.funderEmail ?? undefined,
     conventionSignedAt: row.conventionSignedAt ?? undefined,
     presenceConfirmedForSessionId:
