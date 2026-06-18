@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
+  Award,
   Calendar,
   ClipboardList,
   FileDown,
@@ -53,6 +54,8 @@ import {
 } from "@/components/ui/table";
 import { ParticipantSearchInput } from "@/components/participant-search-input";
 import { SessionPrintSummary } from "@/components/session-print-summary";
+import { TrainingAttestationPrint } from "@/components/training-attestation-print";
+import { AttestationPrintDialog } from "@/features/emargement/attestation-print-dialog";
 import { NoteSnippetsControls } from "@/components/note-snippets-controls";
 import { filterStudentsByQuery } from "@/lib/student-search";
 import { useSlashFocus } from "@/hooks/use-slash-focus";
@@ -101,6 +104,11 @@ export function SessionEmargementClient({ sessionId }: { sessionId: string }) {
   const [metaDate, setMetaDate] = React.useState("");
   const [metaLocation, setMetaLocation] = React.useState("");
   const [metaTrainer, setMetaTrainer] = React.useState("");
+  const [attestationDialogOpen, setAttestationDialogOpen] =
+    React.useState(false);
+  const [attestationPrintIds, setAttestationPrintIds] = React.useState<
+    string[] | null
+  >(null);
 
   const session = state.sessions.find((s) => s.id === sessionId);
   const signatureSummary = session
@@ -135,6 +143,25 @@ export function SessionEmargementClient({ sessionId }: { sessionId: string }) {
   React.useEffect(() => {
     if (session) setTagsDraft((session.tags ?? []).join(", "));
   }, [session?.id, (session?.tags ?? []).join("|")]);
+
+  const attestationPrintStudents = React.useMemo(() => {
+    if (!attestationPrintIds?.length) return [];
+    const idSet = new Set(attestationPrintIds);
+    return students.filter((s) => idSet.has(s.id));
+  }, [attestationPrintIds, students]);
+
+  const printMode = attestationPrintIds ? "attestation" : "emargement";
+
+  React.useEffect(() => {
+    if (!attestationPrintIds) return;
+    const reset = () => setAttestationPrintIds(null);
+    window.addEventListener("afterprint", reset);
+    const t = window.setTimeout(() => window.print(), 80);
+    return () => {
+      window.removeEventListener("afterprint", reset);
+      window.clearTimeout(t);
+    };
+  }, [attestationPrintIds]);
 
   React.useEffect(() => {
     if (!session) return;
@@ -336,8 +363,17 @@ export function SessionEmargementClient({ sessionId }: { sessionId: string }) {
     </div>
   );
 
+  const triggerAttestationPrint = (studentIds: string[]) => {
+    setAttestationPrintIds(studentIds);
+    toast.success(
+      studentIds.length > 1
+        ? `${studentIds.length} attestations prêtes — choisissez « Enregistrer en PDF » dans la fenêtre d’impression si besoin.`
+        : "Attestation prête — choisissez « Enregistrer en PDF » dans la fenêtre d’impression si besoin.",
+    );
+  };
+
   return (
-    <div>
+    <div data-print-mode={printMode}>
       <div className="print:hidden space-y-8">
       <div className="space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -360,6 +396,16 @@ export function SessionEmargementClient({ sessionId }: { sessionId: string }) {
             >
               <Printer className="size-4 shrink-0" />
               <span className="whitespace-nowrap">Imprimer / PDF</span>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="shrink-0 gap-2 rounded-full border-border/80"
+              onClick={() => setAttestationDialogOpen(true)}
+              disabled={students.length === 0}
+            >
+              <Award className="size-4 shrink-0" />
+              <span className="whitespace-nowrap">Attestations</span>
             </Button>
             <Button
               type="button"
@@ -897,6 +943,14 @@ export function SessionEmargementClient({ sessionId }: { sessionId: string }) {
           )}
         </DialogContent>
       </Dialog>
+
+      <AttestationPrintDialog
+        open={attestationDialogOpen}
+        onOpenChange={setAttestationDialogOpen}
+        session={session}
+        students={students}
+        onPrint={triggerAttestationPrint}
+      />
       </div>
 
       <SessionPrintSummary
@@ -905,6 +959,14 @@ export function SessionEmargementClient({ sessionId }: { sessionId: string }) {
         students={students}
         formatFrenchDate={formatFrenchDateLong}
       />
+      {attestationPrintStudents.length > 0 ? (
+        <TrainingAttestationPrint
+          organizationName={state.organizationName}
+          session={session}
+          students={attestationPrintStudents}
+          formatFrenchDate={formatFrenchDateLong}
+        />
+      ) : null}
     </div>
   );
 }

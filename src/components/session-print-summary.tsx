@@ -23,7 +23,7 @@ export function SessionPrintSummary({
   const halves: HalfDay[] = ["morning", "afternoon"];
 
   return (
-    <div className="hidden print:block">
+    <div className="print-emargement-only hidden print:block">
       <header className="mb-8 border-b-2 border-black pb-4">
         {organizationName ? (
           <p className="text-lg font-bold tracking-tight">{organizationName}</p>

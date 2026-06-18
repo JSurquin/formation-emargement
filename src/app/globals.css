@@ -174,4 +174,10 @@
   .no-print {
     display: none !important;
   }
+  [data-print-mode="attestation"] .print-emargement-only {
+    display: none !important;
+  }
+  [data-print-mode="emargement"] .print-attestation-only {
+    display: none !important;
+  }
 }
