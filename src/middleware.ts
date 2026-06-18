@@ -1,8 +1,7 @@
 import { jwtVerify } from "jose";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { AUTH_COOKIE_NAME } from "@/lib/auth-session";
-import type { UserRole } from "@/lib/auth-types";
+import { AUTH_COOKIE_NAME, type UserRole } from "@/lib/auth-types";
 
 const PUBLIC_PREFIXES = ["/login", "/inscription", "/sign/", "/api/auth/"];
 const ADMIN_PREFIX = "/admin";

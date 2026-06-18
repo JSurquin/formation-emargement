@@ -1,3 +1,5 @@
+export const AUTH_COOKIE_NAME = "fe_auth";
+
 export type UserRole = "SUPER_ADMIN" | "FORMATEUR" | "ELEVE";
 
 export type AuthUser = {

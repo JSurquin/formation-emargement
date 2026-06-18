@@ -1,9 +1,9 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
-import type { AuthUser } from "@/lib/auth-types";
+import { AUTH_COOKIE_NAME, type AuthUser } from "@/lib/auth-types";
 
-export const AUTH_COOKIE_NAME = "fe_auth";
+export { AUTH_COOKIE_NAME };
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 14;
 
 function getAuthSecret(): Uint8Array {
