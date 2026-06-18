@@ -15,10 +15,14 @@ export type AttestationSignature = {
   signedByUserId?: string;
 };
 
-/** Suivi comptable d’un stagiaire pour une session (facture, paiement). */
+/** Suivi comptable d’un stagiaire pour une session (facture, paiement, CPF). */
 export type SessionStudentAccounting = {
   invoiceSentAt?: string;
   paymentReceivedAt?: string;
+  /** Déclaration d’entrée en formation sur Mon Compte Formation. */
+  cpfEntryNotifiedAt?: string;
+  /** Déclaration de sortie en formation sur Mon Compte Formation. */
+  cpfExitNotifiedAt?: string;
   notes?: string;
 };
 

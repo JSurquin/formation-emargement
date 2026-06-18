@@ -878,6 +878,8 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
           };
           if (!nextEntry.invoiceSentAt) delete nextEntry.invoiceSentAt;
           if (!nextEntry.paymentReceivedAt) delete nextEntry.paymentReceivedAt;
+          if (!nextEntry.cpfEntryNotifiedAt) delete nextEntry.cpfEntryNotifiedAt;
+          if (!nextEntry.cpfExitNotifiedAt) delete nextEntry.cpfExitNotifiedAt;
           if (!nextEntry.notes?.trim()) delete nextEntry.notes;
           const next = { ...(sess.sessionAccounting ?? {}) };
           if (Object.keys(nextEntry).length) {

@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   ExternalLink,
   FileText,
+  GraduationCap,
   Mail,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -35,6 +36,11 @@ import {
   listAccountingRows,
   type AccountingCategory,
 } from "@/lib/accounting";
+import {
+  countPendingCpfNotifications,
+  listCpfAccountingRows,
+  type CpfNotificationStatus,
+} from "@/lib/cpf-accounting";
 import { formatFrenchDateLong, formatFrenchDateTimeShort } from "@/lib/date-format";
 import { cn } from "@/lib/utils";
 
@@ -44,6 +50,37 @@ const TAB_ORDER: AccountingCategory[] = [
   "en_attente_paiement",
   "paye",
 ];
+
+const CPF_PORTAL_URL = "https://www.moncompteformation.gouv.fr/";
+
+function cpfStatusLabel(
+  kind: "entry" | "exit",
+  status: CpfNotificationStatus,
+  notifiedAt?: string,
+): React.ReactNode {
+  if (status === "done" && notifiedAt) {
+    return (
+      <p className="flex items-center gap-1 text-xs text-emerald-700 dark:text-emerald-400">
+        <CheckCircle2 className="size-3.5 shrink-0" />
+        Déclarée le {formatFrenchDateTimeShort(notifiedAt)}
+      </p>
+    );
+  }
+  if (status === "pending") {
+    return (
+      <p className="text-xs font-medium text-amber-700 dark:text-amber-400">
+        {kind === "entry"
+          ? "Entrée à déclarer sur Mon Compte Formation"
+          : "Sortie à déclarer sur Mon Compte Formation"}
+      </p>
+    );
+  }
+  return (
+    <p className="text-xs text-muted-foreground">
+      {kind === "entry" ? "Avant le début" : "Après la formation"}
+    </p>
+  );
+}
 
 export function AdminAccountingSection() {
   const { state, hydrated, setSessionAccounting } = useFormation();
@@ -57,6 +94,16 @@ export function AdminAccountingSection() {
   const rows = React.useMemo(
     () => listAccountingRows(state.students, state.sessions, tab),
     [state.students, state.sessions, tab],
+  );
+
+  const cpfRows = React.useMemo(
+    () => listCpfAccountingRows(state.students, state.sessions),
+    [state.students, state.sessions],
+  );
+
+  const pendingCpfCount = React.useMemo(
+    () => countPendingCpfNotifications(state.students, state.sessions),
+    [state.students, state.sessions],
   );
 
   const markInvoiceSent = (sessionId: string, studentId: string) => {
@@ -89,7 +136,22 @@ export function AdminAccountingSection() {
     toast.success("Paiement réinitialisé.");
   };
 
+  const markCpfEntryNotified = (sessionId: string, studentId: string) => {
+    setSessionAccounting(sessionId, studentId, {
+      cpfEntryNotifiedAt: new Date().toISOString(),
+    });
+    toast.success("Entrée CPF enregistrée.");
+  };
+
+  const markCpfExitNotified = (sessionId: string, studentId: string) => {
+    setSessionAccounting(sessionId, studentId, {
+      cpfExitNotifiedAt: new Date().toISOString(),
+    });
+    toast.success("Sortie CPF enregistrée.");
+  };
+
   return (
+    <div className="space-y-6">
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
@@ -316,5 +378,178 @@ export function AdminAccountingSection() {
         )}
       </CardContent>
     </Card>
+
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <GraduationCap className="size-5" />
+          Suivi CPF
+          {pendingCpfCount > 0 ? (
+            <Badge variant="secondary" className="rounded-full">
+              {pendingCpfCount} à faire
+            </Badge>
+          ) : null}
+        </CardTitle>
+        <CardDescription>
+          Stagiaires financés par le CPF : déclarez l&apos;entrée en formation
+          avant le début, puis la sortie après la session, sur{" "}
+          <a
+            href={CPF_PORTAL_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-foreground underline underline-offset-2"
+          >
+            Mon Compte Formation
+          </a>
+          .
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {!hydrated ? (
+          <p className="text-sm text-muted-foreground">Chargement…</p>
+        ) : cpfRows.length === 0 ? (
+          <p className="rounded-lg border border-dashed border-border/70 px-4 py-8 text-center text-sm text-muted-foreground dark:border-white/10">
+            Aucun stagiaire financé par le CPF pour le moment.
+          </p>
+        ) : (
+          <div className="overflow-x-auto rounded-xl border border-border/60 dark:border-white/10">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Stagiaire</TableHead>
+                  <TableHead>Formation</TableHead>
+                  <TableHead>Entrée CPF</TableHead>
+                  <TableHead>Sortie CPF</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {cpfRows.map((row) => (
+                  <TableRow key={`cpf-${row.sessionId}-${row.studentId}`}>
+                    <TableCell>
+                      <p className="font-medium">
+                        {row.student.firstName} {row.student.lastName}
+                      </p>
+                      {row.student.email ? (
+                        <p className="text-xs text-muted-foreground">
+                          {row.student.email}
+                        </p>
+                      ) : null}
+                    </TableCell>
+                    <TableCell>
+                      <p>{row.session.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatFrenchDateLong(row.session.date)}
+                      </p>
+                    </TableCell>
+                    <TableCell>
+                      {cpfStatusLabel(
+                        "entry",
+                        row.entryStatus,
+                        row.accounting?.cpfEntryNotifiedAt,
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {cpfStatusLabel(
+                        "exit",
+                        row.exitStatus,
+                        row.accounting?.cpfExitNotifiedAt,
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap justify-end gap-2">
+                        <a
+                          href={CPF_PORTAL_URL}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={cn(
+                            buttonVariants({
+                              variant: "outline",
+                              size: "sm",
+                            }),
+                            "gap-1 rounded-full",
+                          )}
+                        >
+                          <ExternalLink className="size-3.5" />
+                          Portail CPF
+                        </a>
+                        <Link
+                          href={`/eleves/${row.studentId}`}
+                          className={cn(
+                            buttonVariants({
+                              variant: "outline",
+                              size: "sm",
+                            }),
+                            "gap-1 rounded-full",
+                          )}
+                        >
+                          <ExternalLink className="size-3.5" />
+                          Fiche
+                        </Link>
+                        {row.entryStatus === "pending" ? (
+                          <Button
+                            type="button"
+                            size="sm"
+                            className="gap-1 rounded-full"
+                            onClick={() =>
+                              markCpfEntryNotified(row.sessionId, row.studentId)
+                            }
+                          >
+                            <CheckCircle2 className="size-3.5" />
+                            Entrée faite
+                          </Button>
+                        ) : row.entryStatus === "done" ? (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="rounded-full"
+                            onClick={() =>
+                              setSessionAccounting(row.sessionId, row.studentId, {
+                                cpfEntryNotifiedAt: undefined,
+                              })
+                            }
+                          >
+                            Annuler entrée
+                          </Button>
+                        ) : null}
+                        {row.exitStatus === "pending" ? (
+                          <Button
+                            type="button"
+                            size="sm"
+                            className="gap-1 rounded-full"
+                            onClick={() =>
+                              markCpfExitNotified(row.sessionId, row.studentId)
+                            }
+                          >
+                            <CheckCircle2 className="size-3.5" />
+                            Sortie faite
+                          </Button>
+                        ) : row.exitStatus === "done" ? (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="rounded-full"
+                            onClick={() =>
+                              setSessionAccounting(row.sessionId, row.studentId, {
+                                cpfExitNotifiedAt: undefined,
+                              })
+                            }
+                          >
+                            Annuler sortie
+                          </Button>
+                        ) : null}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+    </div>
   );
 }
