@@ -13,6 +13,7 @@ describe("mapSessionToPlanningRow", () => {
       location: "Paris",
       studentIds: ["a", "b"],
       archived: false,
+      trainerDocuments: null,
     });
     expect(row.studentCount).toBe(2);
     expect(row.location).toBe("Paris");
@@ -29,6 +30,7 @@ describe("splitPlanningSessions", () => {
         location: null,
         studentIds: [],
         archived: true,
+        trainerDocuments: null,
       }),
       mapSessionToPlanningRow({
         id: "soon",
@@ -37,6 +39,7 @@ describe("splitPlanningSessions", () => {
         location: null,
         studentIds: ["x"],
         archived: false,
+        trainerDocuments: null,
       }),
       mapSessionToPlanningRow({
         id: "next",
@@ -45,6 +48,7 @@ describe("splitPlanningSessions", () => {
         location: null,
         studentIds: [],
         archived: false,
+        trainerDocuments: null,
       }),
     ];
 

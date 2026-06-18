@@ -16,7 +16,9 @@ import {
   UserPlus,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/components/providers/auth-provider";
 import { useFormation } from "@/components/providers/formation-provider";
+import { TrainerSessionDocuments } from "@/components/trainer-session-documents";
 import type { HalfDay, Student } from "@/lib/types";
 import { SignaturePad } from "@/components/signature-pad";
 import { GradientAccent } from "@/components/page-header";
@@ -79,6 +81,7 @@ const tabActiveClass =
   "data-active:bg-gradient-to-r data-active:from-indigo-600 data-active:to-violet-600 data-active:text-white data-active:shadow-md data-active:shadow-indigo-600/25 dark:data-active:from-indigo-500 dark:data-active:to-violet-500";
 
 export function SessionEmargementClient({ sessionId }: { sessionId: string }) {
+  const { user } = useAuth();
   const {
     state,
     hydrated,
@@ -654,6 +657,23 @@ export function SessionEmargementClient({ sessionId }: { sessionId: string }) {
           </div>
         </CardContent>
       </Card>
+
+      {user?.role === "SUPER_ADMIN" ? (
+        <TrainerSessionDocuments
+          documents={session.trainerDocuments ?? []}
+          onChange={(trainerDocuments) =>
+            updateSession(session.id, { trainerDocuments })
+          }
+          description="Ordre de mission et autres pièces à mettre à disposition du formateur assigné (images ou PDF, 4 Mo max)."
+        />
+      ) : user?.role === "FORMATEUR" &&
+        (session.trainerDocuments?.length ?? 0) > 0 ? (
+        <TrainerSessionDocuments
+          documents={session.trainerDocuments ?? []}
+          readOnly
+          description="Documents préparés par l'administration pour votre intervention."
+        />
+      ) : null}
 
       <Card className="dg-surface ring-0">
         <CardHeader className="border-b border-border/50 pb-4 dark:border-white/10">

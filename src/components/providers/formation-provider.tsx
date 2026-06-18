@@ -80,6 +80,7 @@ type FormationContextValue = {
         | "archived"
         | "location"
         | "trainer"
+        | "trainerDocuments"
       >
     >,
   ) => void;
@@ -481,6 +482,7 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
           | "archived"
           | "location"
           | "trainer"
+          | "trainerDocuments"
         >
       >,
     ) => {
@@ -499,6 +501,10 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
             next.location = patch.location.trim() || undefined;
           if (patch.trainer !== undefined)
             next.trainer = patch.trainer.trim() || undefined;
+          if (patch.trainerDocuments !== undefined)
+            next.trainerDocuments = patch.trainerDocuments.length
+              ? patch.trainerDocuments
+              : undefined;
           next.lastActivityAt = new Date().toISOString();
           return next;
         }),

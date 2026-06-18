@@ -8,6 +8,18 @@ export type AttendanceSlot = {
   signedAt: string | null;
 };
 
+/** Document administratif pour le formateur (ordre de mission, etc.). */
+export type TrainerDocument = {
+  id: string;
+  label: string;
+  /** mission_order | other */
+  kind: "mission_order" | "other";
+  fileName: string;
+  mimeType: string;
+  dataUrl: string;
+  uploadedAt: string;
+};
+
 /** Pièce jointe sur la fiche candidat (stockée localement en data URL). */
 export type StudentDocument = {
   id: string;
@@ -68,6 +80,8 @@ export type TrainingSession = {
   trainer?: string;
   /** Formateur assigné (compte utilisateur). */
   trainerUserId?: string;
+  /** Documents à disposition du formateur (ordre de mission, etc.). */
+  trainerDocuments?: TrainerDocument[];
   /** Horodatage de création (ISO). */
   createdAt?: string;
   /** Dernière modification utile (présences, signatures, méta…). */

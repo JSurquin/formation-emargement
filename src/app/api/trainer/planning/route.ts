@@ -25,6 +25,7 @@ export async function GET() {
         location: true,
         studentIds: true,
         archived: true,
+        trainerDocuments: true,
       },
     });
 

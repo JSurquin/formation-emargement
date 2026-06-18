@@ -12,6 +12,7 @@ import type {
   SessionTemplate,
   Student,
   StudentDocument,
+  TrainerDocument,
   TrainingSession,
 } from "@/lib/types";
 import type { FundingMethod } from "@/lib/funding-method";
@@ -80,6 +81,29 @@ function asAttendance(value: Prisma.JsonValue): TrainingSession["attendance"] {
     }
   }
   return { morning, afternoon };
+}
+
+function asTrainerDocuments(
+  value: Prisma.JsonValue | null,
+): TrainerDocument[] | undefined {
+  if (!Array.isArray(value) || !value.length) return undefined;
+  const out: TrainerDocument[] = [];
+  for (const item of value) {
+    if (
+      item &&
+      typeof item === "object" &&
+      !Array.isArray(item) &&
+      typeof (item as TrainerDocument).id === "string" &&
+      typeof (item as TrainerDocument).label === "string" &&
+      typeof (item as TrainerDocument).fileName === "string" &&
+      typeof (item as TrainerDocument).mimeType === "string" &&
+      typeof (item as TrainerDocument).dataUrl === "string" &&
+      typeof (item as TrainerDocument).uploadedAt === "string"
+    ) {
+      out.push(item as TrainerDocument);
+    }
+  }
+  return out.length ? out : undefined;
 }
 
 function asStudentDocuments(value: Prisma.JsonValue | null): StudentDocument[] | undefined {
@@ -153,6 +177,7 @@ function rowToSession(row: {
   archived: boolean;
   location: string | null;
   trainer: string | null;
+  trainerDocuments: Prisma.JsonValue | null;
   createdAt: Date | null;
   lastActivityAt: Date | null;
   attendance: Prisma.JsonValue;
@@ -170,6 +195,7 @@ function rowToSession(row: {
     archived: row.archived || undefined,
     location: row.location ?? undefined,
     trainer: row.trainer ?? undefined,
+    trainerDocuments: asTrainerDocuments(row.trainerDocuments),
     createdAt: row.createdAt?.toISOString(),
     lastActivityAt: row.lastActivityAt?.toISOString(),
     attendance: asAttendance(row.attendance),
@@ -299,6 +325,10 @@ export async function saveAppStateToDb(state: AppState): Promise<void> {
     }
 
     for (const session of normalized.sessions) {
+      const trainerDocuments =
+        session.trainerDocuments?.length
+          ? session.trainerDocuments
+          : PrismaNamespace.DbNull;
       await tx.trainingSession.upsert({
         where: { id: session.id },
         create: {
@@ -312,6 +342,7 @@ export async function saveAppStateToDb(state: AppState): Promise<void> {
           archived: session.archived === true,
           location: session.location ?? null,
           trainer: session.trainer ?? null,
+          trainerDocuments,
           createdAt: parseIsoDate(session.createdAt),
           lastActivityAt: parseIsoDate(session.lastActivityAt),
           attendance: session.attendance,
@@ -326,6 +357,7 @@ export async function saveAppStateToDb(state: AppState): Promise<void> {
           archived: session.archived === true,
           location: session.location ?? null,
           trainer: session.trainer ?? null,
+          trainerDocuments,
           createdAt: parseIsoDate(session.createdAt),
           lastActivityAt: parseIsoDate(session.lastActivityAt),
           attendance: session.attendance,

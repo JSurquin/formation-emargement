@@ -2,8 +2,9 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { CalendarDays, ChevronRight, MapPin, Users } from "lucide-react";
+import { CalendarDays, ChevronRight, Download, MapPin, Users } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
+import { TrainerSessionDocuments } from "@/components/trainer-session-documents";
 import { GradientAccent, PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -32,7 +33,7 @@ function PlanningSessionRow({ session }: { session: TrainerPlanningSession }) {
   const relDay = formatSessionRelativeDay(session.date);
 
   return (
-    <li>
+    <li className="space-y-3">
       <Link
         href={`/sessions/${session.id}`}
         className="group flex flex-col gap-3 rounded-xl border border-border/60 bg-card/50 p-4 transition-all hover:border-indigo-500/40 hover:bg-card hover:shadow-md dark:border-white/10 sm:flex-row sm:items-center sm:justify-between"
@@ -45,6 +46,13 @@ function PlanningSessionRow({ session }: { session: TrainerPlanningSession }) {
             {session.archived ? (
               <Badge variant="secondary" className="rounded-full text-xs">
                 Archivée
+              </Badge>
+            ) : null}
+            {session.documents.length > 0 ? (
+              <Badge variant="outline" className="gap-1 rounded-full text-xs">
+                <Download className="size-3" aria-hidden />
+                {session.documents.length} doc
+                {session.documents.length > 1 ? "s" : ""}
               </Badge>
             ) : null}
           </div>
@@ -81,6 +89,18 @@ function PlanningSessionRow({ session }: { session: TrainerPlanningSession }) {
           <ChevronRight className="size-4" aria-hidden />
         </span>
       </Link>
+      {session.documents.length > 0 ? (
+        <div className="rounded-xl border border-border/60 bg-muted/20 p-4 dark:border-white/10">
+          <p className="mb-3 text-sm font-medium text-foreground">
+            Documents à télécharger
+          </p>
+          <TrainerSessionDocuments
+            documents={session.documents}
+            readOnly
+            compact
+          />
+        </div>
+      ) : null}
     </li>
   );
 }
@@ -207,6 +227,14 @@ export default function PlanningPage() {
   }
 
   const todayLabel = formatFrenchDateLong(new Date().toISOString().slice(0, 10));
+  const allDocuments = [...(data?.upcoming ?? []), ...(data?.past ?? [])].flatMap(
+    (session) =>
+      session.documents.map((doc) => ({
+        ...doc,
+        sessionTitle: session.title,
+        sessionDate: session.date,
+      })),
+  );
 
   return (
     <div className="space-y-10">
@@ -234,6 +262,51 @@ export default function PlanningPage() {
           </CardDescription>
         </CardHeader>
       </Card>
+
+      {allDocuments.length > 0 ? (
+        <Card className="dg-surface ring-0">
+          <CardHeader>
+            <CardTitle className="font-heading text-lg">
+              Vos documents administratifs
+            </CardTitle>
+            <CardDescription>
+              Ordres de mission et pièces jointes préparées par l&apos;administration
+              pour vos sessions assignées.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-3">
+              {allDocuments.map((doc) => (
+                <li
+                  key={`${doc.id}-${doc.sessionTitle}`}
+                  className="flex flex-col gap-3 rounded-xl border border-border/70 bg-muted/20 p-4 sm:flex-row sm:items-center sm:justify-between dark:border-white/10"
+                >
+                  <div className="min-w-0">
+                    <p className="font-medium">{doc.label}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {doc.sessionTitle} · {formatFrenchDateShort(doc.sessionDate)}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {doc.fileName}
+                    </p>
+                  </div>
+                  <a
+                    href={doc.dataUrl}
+                    download={doc.fileName}
+                    className={cn(
+                      buttonVariants({ variant: "default", size: "sm" }),
+                      "shrink-0 gap-1.5 rounded-full self-start sm:self-center",
+                    )}
+                  >
+                    <Download className="size-3.5" />
+                    Télécharger
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <PlanningSection
         title="À venir"
