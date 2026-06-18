@@ -28,6 +28,10 @@ export const KEYBOARD_HELP_ROWS: KeyboardHelpRow[] = [
     desc: "Aller à l’annuaire élèves (depuis n’importe quelle page).",
   },
   {
+    keys: "c",
+    desc: "Aller à la page conventions (liste des conventions créées).",
+  },
+  {
     keys: "s",
     desc: "Aller à la page statistiques (signatures par élève).",
   },
@@ -66,6 +70,13 @@ export function handleAppShellNavigationKey(
     if (pathname.startsWith("/eleves")) return false;
     e.preventDefault();
     router.push("/eleves");
+    return true;
+  }
+
+  if (k === "c" || k === "C") {
+    if (pathname.startsWith("/conventions")) return false;
+    e.preventDefault();
+    router.push("/conventions");
     return true;
   }
 

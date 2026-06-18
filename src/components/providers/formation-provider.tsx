@@ -232,6 +232,7 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
           funderSiret: input.funderSiret?.replace(/\s/g, "") || undefined,
           funderEmail: input.funderEmail?.trim() || undefined,
           conventionSignedAt: input.conventionSignedAt || undefined,
+          conventionCreatedAt: input.conventionCreatedAt || undefined,
           presenceConfirmedForSessionId:
             input.presenceConfirmedForSessionId || undefined,
           documents: input.documents?.length ? input.documents : undefined,
@@ -270,6 +271,8 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
             next.funderEmail = patch.funderEmail.trim() || undefined;
           if (patch.conventionSignedAt !== undefined)
             next.conventionSignedAt = patch.conventionSignedAt || undefined;
+          if (patch.conventionCreatedAt !== undefined)
+            next.conventionCreatedAt = patch.conventionCreatedAt || undefined;
           if (patch.presenceConfirmedForSessionId !== undefined)
             next.presenceConfirmedForSessionId =
               patch.presenceConfirmedForSessionId || undefined;
@@ -341,6 +344,7 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
         funderSiret: undefined,
         funderEmail: undefined,
         conventionSignedAt: undefined,
+        conventionCreatedAt: undefined,
         presenceConfirmedForSessionId: undefined,
         documents: undefined,
       };

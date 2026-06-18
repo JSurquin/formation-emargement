@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   BarChart3,
+  FileText,
   GraduationCap,
   LayoutDashboard,
   LogOut,
@@ -25,6 +26,7 @@ import { cn } from "@/lib/utils";
 const nav = [
   { href: "/", label: "Sessions", icon: LayoutDashboard },
   { href: "/eleves", label: "Élèves", icon: Users },
+  { href: "/conventions", label: "Conventions", icon: FileText },
   { href: "/statistiques", label: "Stats", icon: BarChart3 },
 ];
 

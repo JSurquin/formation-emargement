@@ -38,6 +38,7 @@ export function migrateAppState(state: AppState): AppState {
         ...s,
         funderEmail: s.funderEmail?.trim() || undefined,
         conventionSignedAt: s.conventionSignedAt || undefined,
+        conventionCreatedAt: s.conventionCreatedAt || undefined,
         presenceConfirmedForSessionId:
           s.presenceConfirmedForSessionId || undefined,
       })),

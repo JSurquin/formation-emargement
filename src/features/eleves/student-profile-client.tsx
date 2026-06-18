@@ -133,6 +133,11 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
   }, [profilePrintMode]);
 
   const triggerProfilePrint = (mode: StudentProfilePrintMode) => {
+    if (mode === "convention" && student && !student.conventionCreatedAt) {
+      updateStudent(student.id, {
+        conventionCreatedAt: new Date().toISOString(),
+      });
+    }
     setProfilePrintMode(mode);
     toast.success(
       mode === "convention"
