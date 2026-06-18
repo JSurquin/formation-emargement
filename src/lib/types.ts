@@ -71,6 +71,8 @@ export type Student = {
   conventionSignedAt?: string;
   /** Date de création / impression de la convention (ISO). */
   conventionCreatedAt?: string;
+  /** Candidat « titulaire » lorsque cette fiche est rattachée à une convention existante. */
+  linkedConventionStudentId?: string;
   /** Session pour laquelle le candidat a confirmé sa présence. */
   presenceConfirmedForSessionId?: string;
   /** Justificatifs d'inscription (carte d'identité, etc.). */

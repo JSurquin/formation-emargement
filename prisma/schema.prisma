@@ -35,6 +35,7 @@ model Student {
   funderEmail          String?
   conventionSignedAt   String?
   conventionCreatedAt  String?
+  linkedConventionStudentId String?
   presenceConfirmedForSessionId String?
   documents            Json?
   createdAt            DateTime @default(now())

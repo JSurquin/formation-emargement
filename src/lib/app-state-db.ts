@@ -143,6 +143,7 @@ function rowToStudent(row: {
   funderEmail: string | null;
   conventionSignedAt: string | null;
   conventionCreatedAt: string | null;
+  linkedConventionStudentId: string | null;
   presenceConfirmedForSessionId: string | null;
   documents: Prisma.JsonValue | null;
 }): Student {
@@ -162,6 +163,7 @@ function rowToStudent(row: {
     funderEmail: row.funderEmail ?? undefined,
     conventionSignedAt: row.conventionSignedAt ?? undefined,
     conventionCreatedAt: row.conventionCreatedAt ?? undefined,
+    linkedConventionStudentId: row.linkedConventionStudentId ?? undefined,
     presenceConfirmedForSessionId:
       row.presenceConfirmedForSessionId ?? undefined,
     documents: asStudentDocuments(row.documents),
@@ -347,6 +349,7 @@ export async function saveAppStateToDb(state: AppState): Promise<void> {
           funderEmail: student.funderEmail ?? null,
           conventionSignedAt: student.conventionSignedAt ?? null,
           conventionCreatedAt: student.conventionCreatedAt ?? null,
+          linkedConventionStudentId: student.linkedConventionStudentId ?? null,
           presenceConfirmedForSessionId:
             student.presenceConfirmedForSessionId ?? null,
           documents,
@@ -364,6 +367,7 @@ export async function saveAppStateToDb(state: AppState): Promise<void> {
           funderEmail: student.funderEmail ?? null,
           conventionSignedAt: student.conventionSignedAt ?? null,
           conventionCreatedAt: student.conventionCreatedAt ?? null,
+          linkedConventionStudentId: student.linkedConventionStudentId ?? null,
           presenceConfirmedForSessionId:
             student.presenceConfirmedForSessionId ?? null,
           documents,

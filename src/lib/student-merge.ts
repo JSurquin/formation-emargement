@@ -43,6 +43,10 @@ export function mergeStudentsIntoLocal(
           s.conventionCreatedAt !== undefined
             ? s.conventionCreatedAt
             : cur.conventionCreatedAt,
+        linkedConventionStudentId:
+          s.linkedConventionStudentId !== undefined
+            ? s.linkedConventionStudentId
+            : cur.linkedConventionStudentId,
         presenceConfirmedForSessionId:
           s.presenceConfirmedForSessionId !== undefined
             ? s.presenceConfirmedForSessionId

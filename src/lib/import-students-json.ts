@@ -14,6 +14,8 @@ function isStudentLike(x: unknown): x is Omit<Student, "id"> {
     (o.socialSecurityNumber === undefined ||
       typeof o.socialSecurityNumber === "string") &&
     (o.dateOfBirth === undefined || typeof o.dateOfBirth === "string") &&
+    (o.linkedConventionStudentId === undefined ||
+      typeof o.linkedConventionStudentId === "string") &&
     (o.fundingMethod === undefined || typeof o.fundingMethod === "string")
   );
 }

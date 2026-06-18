@@ -39,7 +39,7 @@ function session(
 describe("accounting", () => {
   it("classe un dossier incomplet en relance", () => {
     const sess = session("sess1", "2099-06-01");
-    const row = classifyAccountingRow(student, sess, [sess], "2024-01-01");
+    const row = classifyAccountingRow(student, sess, [sess], [student], "2024-01-01");
     expect(row?.category).toBe("relance");
     expect(row?.followUpLabels.length).toBeGreaterThan(0);
   });
@@ -62,7 +62,7 @@ describe("accounting", () => {
       presenceConfirmedForSessionId: "sess1",
     };
     const sess = session("sess1", "2024-05-10");
-    const row = classifyAccountingRow(complete, sess, [sess], "2024-06-01");
+    const row = classifyAccountingRow(complete, sess, [sess], [complete], "2024-06-01");
     expect(row?.category).toBe("facture_a_envoyer");
   });
 
@@ -89,7 +89,7 @@ describe("accounting", () => {
       },
     });
     expect(
-      classifyAccountingRow(complete, invoiced, [invoiced], "2024-06-01")
+      classifyAccountingRow(complete, invoiced, [invoiced], [complete], "2024-06-01")
         ?.category,
     ).toBe("en_attente_paiement");
 
@@ -102,7 +102,7 @@ describe("accounting", () => {
       },
     });
     expect(
-      classifyAccountingRow(complete, paid, [paid], "2024-06-02")?.category,
+      classifyAccountingRow(complete, paid, [paid], [complete], "2024-06-02")?.category,
     ).toBe("paye");
   });
 

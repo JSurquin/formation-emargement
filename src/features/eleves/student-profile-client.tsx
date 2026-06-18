@@ -52,9 +52,13 @@ import { FUNDING_METHOD_OPTIONS, type FundingMethod } from "@/lib/funding-method
 import {
   getStudentFollowUp,
   hasIdentityDocument,
-  isConventionSigned,
   isPresenceConfirmedForSession,
 } from "@/lib/student-follow-up";
+import {
+  hasConventionBeenCreated,
+  isConventionSigned,
+  listAttachableConventionsForStudent,
+} from "@/lib/convention-list";
 import {
   buildConventionReminderEmail,
   buildConventionToCandidateEmail,
@@ -190,7 +194,11 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
   }, [attestationPrintSessionId]);
 
   const triggerProfilePrint = (mode: StudentProfilePrintMode) => {
-    if (mode === "convention" && student && !student.conventionCreatedAt) {
+    if (
+      mode === "convention" &&
+      student &&
+      !hasConventionBeenCreated(student, state.students)
+    ) {
       updateStudent(student.id, {
         conventionCreatedAt: new Date().toISOString(),
       });
@@ -210,8 +218,26 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
 
   const followUp = React.useMemo(() => {
     if (!student) return null;
-    return getStudentFollowUp(student, state.sessions);
-  }, [student, state.sessions]);
+    return getStudentFollowUp(student, state.sessions, state.students);
+  }, [student, state.sessions, state.students]);
+
+  const attachableConventions = React.useMemo(() => {
+    if (!student) return [];
+    return listAttachableConventionsForStudent(
+      student,
+      state.students,
+      state.sessions,
+    );
+  }, [student, state.students, state.sessions]);
+
+  const linkedConventionStudent = React.useMemo(() => {
+    if (!student?.linkedConventionStudentId) return undefined;
+    return state.students.find(
+      (s) => s.id === student.linkedConventionStudentId,
+    );
+  }, [student?.linkedConventionStudentId, state.students]);
+
+  const [attachConventionId, setAttachConventionId] = React.useState("");
 
   const signedAttestations = React.useMemo(
     () => listSignedAttestationsForStudent(studentId, state.sessions),
@@ -320,8 +346,8 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
   };
 
   const toggleConventionSigned = () => {
-    if (!student) return;
-    if (isConventionSigned(student)) {
+    if (!student || student.linkedConventionStudentId) return;
+    if (isConventionSigned(student, state.students)) {
       updateStudent(student.id, { conventionSignedAt: undefined });
       toast.success("Convention marquée comme non signée.");
       return;
@@ -330,6 +356,27 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
       conventionSignedAt: new Date().toISOString(),
     });
     toast.success("Convention marquée comme signée.");
+  };
+
+  const attachToExistingConvention = () => {
+    if (!student || !attachConventionId) return;
+    const referenceStudent = state.students.find(
+      (s) => s.id === attachConventionId,
+    );
+    if (!referenceStudent) return;
+    updateStudent(student.id, {
+      linkedConventionStudentId: referenceStudent.id,
+    });
+    setAttachConventionId("");
+    toast.success(
+      `Fiche rattachée à la convention de ${referenceStudent.firstName} ${referenceStudent.lastName}.`,
+    );
+  };
+
+  const detachFromConvention = () => {
+    if (!student?.linkedConventionStudentId) return;
+    updateStudent(student.id, { linkedConventionStudentId: undefined });
+    toast.success("Rattachement à la convention existante retiré.");
   };
 
   const togglePresenceConfirmed = () => {
@@ -761,9 +808,9 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
               Suivi dossier &amp; relances
             </CardTitle>
             <CardDescription>
-              État du dossier d&apos;inscription, création de la convention
-              depuis cette fiche, et envoi de rappels par e-mail (convocation,
-              documents manquants, confirmation de présence).
+              État du dossier d&apos;inscription, création ou rattachement de
+              la convention depuis cette fiche, et envoi de rappels par e-mail
+              (convocation, documents manquants, confirmation de présence).
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6 pt-6">
@@ -791,8 +838,16 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
                       {!item.ok ? (
                         <p className="mt-0.5 text-xs text-muted-foreground">
                           {item.id === "convention"
-                            ? "Créez la convention ci-dessous, puis faites-la signer"
+                            ? linkedConventionStudent
+                              ? `Rattaché à la convention de ${linkedConventionStudent.firstName} ${linkedConventionStudent.lastName}`
+                              : "Créez la convention ci-dessous ou rattachez-vous à une convention existante"
                             : "Action requise"}
+                        </p>
+                      ) : item.id === "convention" && linkedConventionStudent ? (
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          Convention partagée avec{" "}
+                          {linkedConventionStudent.firstName}{" "}
+                          {linkedConventionStudent.lastName}
                         </p>
                       ) : null}
                     </div>
@@ -802,23 +857,40 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
             ) : null}
 
             <div className="flex flex-wrap gap-3">
+              {!student.linkedConventionStudentId ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="gap-2 rounded-full"
+                  onClick={() => triggerProfilePrint("convention")}
+                >
+                  <FileText className="size-4" />
+                  Créer la convention
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="gap-2 rounded-full"
+                  onClick={() => triggerProfilePrint("convention")}
+                >
+                  <Printer className="size-4" />
+                  Imprimer la convention partagée
+                </Button>
+              )}
               <Button
                 type="button"
-                variant="outline"
+                variant={
+                  isConventionSigned(student, state.students)
+                    ? "secondary"
+                    : "outline"
+                }
                 className="gap-2 rounded-full"
-                onClick={() => triggerProfilePrint("convention")}
-              >
-                <FileText className="size-4" />
-                Créer la convention
-              </Button>
-              <Button
-                type="button"
-                variant={isConventionSigned(student) ? "secondary" : "outline"}
-                className="gap-2 rounded-full"
+                disabled={Boolean(student.linkedConventionStudentId)}
                 onClick={toggleConventionSigned}
               >
                 <CheckCircle2 className="size-4" />
-                {isConventionSigned(student)
+                {isConventionSigned(student, state.students)
                   ? "Convention signée"
                   : "Marquer convention signée"}
               </Button>
@@ -847,6 +919,80 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
               ) : null}
             </div>
 
+            {!hasConventionBeenCreated(student, state.students) &&
+            attachableConventions.length > 0 ? (
+              <div className="space-y-3 rounded-xl border border-dashed border-border/70 bg-muted/10 p-4 dark:border-white/10">
+                <p className="text-sm font-medium">
+                  Rattacher à une convention déjà créée
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Si plusieurs candidats de la même session partagent une seule
+                  convention (même financeur), choisissez la convention
+                  existante au lieu d&apos;en créer une nouvelle.
+                </p>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                  <div className="grid min-w-0 flex-1 gap-2">
+                    <Label htmlFor="attach-convention">Convention existante</Label>
+                    <Select
+                      value={attachConventionId}
+                      onValueChange={setAttachConventionId}
+                    >
+                      <SelectTrigger
+                        id="attach-convention"
+                        className="bg-background/80"
+                      >
+                        <SelectValue placeholder="Choisir une convention…" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {attachableConventions.map((option) => (
+                          <SelectItem
+                            key={option.referenceStudent.id}
+                            value={option.referenceStudent.id}
+                          >
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="rounded-full"
+                    disabled={!attachConventionId}
+                    onClick={attachToExistingConvention}
+                  >
+                    Rattacher
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+
+            {linkedConventionStudent ? (
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-indigo-200/70 bg-indigo-50/40 px-4 py-3 text-sm dark:border-violet-500/20 dark:bg-violet-950/20">
+                <p>
+                  Cette fiche est rattachée à la convention de{" "}
+                  <Link
+                    href={`/eleves/${linkedConventionStudent.id}`}
+                    className="font-medium text-indigo-700 underline underline-offset-2 dark:text-violet-200"
+                  >
+                    {linkedConventionStudent.firstName}{" "}
+                    {linkedConventionStudent.lastName}
+                  </Link>
+                  .
+                </p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="rounded-full"
+                  onClick={detachFromConvention}
+                >
+                  Retirer le rattachement
+                </Button>
+              </div>
+            ) : null}
+
             <div className="space-y-4 rounded-xl border border-border/70 bg-background/50 p-4 dark:border-white/10">
               <p className="font-heading text-sm font-semibold">Relances e-mail</p>
               <div className="flex flex-wrap gap-3">
@@ -856,7 +1002,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
                   className="gap-2 rounded-full"
                   disabled={
                     sendingReminder === "convention" ||
-                    isConventionSigned(student) ||
+                    isConventionSigned(student, state.students) ||
                     !funderEmail.trim()
                   }
                   onClick={() => sendReminder("convention")}

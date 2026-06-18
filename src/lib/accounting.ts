@@ -56,12 +56,13 @@ export function classifyAccountingRow(
   student: Student,
   session: TrainingSession,
   sessions: TrainingSession[],
+  students: Student[],
   today?: string,
 ): AccountingRow | null {
   if (!session.studentIds.includes(student.id)) return null;
 
   const accounting = getSessionStudentAccounting(session, student.id);
-  const { items } = getStudentFollowUp(student, sessions);
+  const { items } = getStudentFollowUp(student, sessions, students);
   const followUpLabels = getPendingFollowUpLabels(items);
   const finished = isSessionFinished(session, today);
   const present = isStudentEligibleForAttestation(session, student.id);
@@ -105,7 +106,7 @@ export function listAccountingRows(
     for (const studentId of session.studentIds) {
       const student = studentMap.get(studentId);
       if (!student) continue;
-      const row = classifyAccountingRow(student, session, sessions);
+      const row = classifyAccountingRow(student, session, sessions, students);
       if (!row) continue;
       if (filterCategory && row.category !== filterCategory) continue;
       rows.push({ ...row, student, session });

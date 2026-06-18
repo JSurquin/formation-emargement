@@ -253,6 +253,8 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
           funderEmail: input.funderEmail?.trim() || undefined,
           conventionSignedAt: input.conventionSignedAt || undefined,
           conventionCreatedAt: input.conventionCreatedAt || undefined,
+          linkedConventionStudentId:
+            input.linkedConventionStudentId || undefined,
           presenceConfirmedForSessionId:
             input.presenceConfirmedForSessionId || undefined,
           documents: input.documents?.length ? input.documents : undefined,
@@ -295,6 +297,9 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
             next.conventionSignedAt = patch.conventionSignedAt || undefined;
           if (patch.conventionCreatedAt !== undefined)
             next.conventionCreatedAt = patch.conventionCreatedAt || undefined;
+          if (patch.linkedConventionStudentId !== undefined)
+            next.linkedConventionStudentId =
+              patch.linkedConventionStudentId || undefined;
           if (patch.presenceConfirmedForSessionId !== undefined)
             next.presenceConfirmedForSessionId =
               patch.presenceConfirmedForSessionId || undefined;
@@ -367,6 +372,7 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
         funderEmail: undefined,
         conventionSignedAt: undefined,
         conventionCreatedAt: undefined,
+        linkedConventionStudentId: undefined,
         presenceConfirmedForSessionId: undefined,
         documents: undefined,
       };

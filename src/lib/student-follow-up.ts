@@ -1,3 +1,4 @@
+import { isConventionSigned as isConventionSignedFromList } from "./convention-list";
 import type { Student, TrainingSession } from "./types";
 import { isStudentProfileComplete } from "./student-profile";
 
@@ -17,8 +18,11 @@ export function hasIdentityDocument(student: Student): boolean {
   return (student.documents ?? []).some((d) => d.kind === "identity");
 }
 
-export function isConventionSigned(student: Student): boolean {
-  return Boolean(student.conventionSignedAt?.trim());
+export function isConventionSigned(
+  student: Student,
+  students: Student[] = [],
+): boolean {
+  return isConventionSignedFromList(student, students);
 }
 
 export function isPresenceConfirmedForSession(
@@ -46,6 +50,7 @@ export function getUpcomingSessionForStudent(
 export function getStudentFollowUp(
   student: Student,
   sessions: TrainingSession[],
+  students: Student[] = [],
 ): { items: FollowUpItem[]; upcomingSession?: TrainingSession } {
   const upcomingSession = getUpcomingSessionForStudent(student.id, sessions);
   const items: FollowUpItem[] = [
@@ -62,7 +67,7 @@ export function getStudentFollowUp(
     {
       id: "convention",
       label: "Convention signée",
-      ok: isConventionSigned(student),
+      ok: isConventionSigned(student, students),
     },
   ];
 

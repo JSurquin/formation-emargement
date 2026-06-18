@@ -32,7 +32,10 @@ import {
 } from "@/components/ui/table";
 import { ParticipantSearchInput } from "@/components/participant-search-input";
 import { filterStudentsByQuery } from "@/lib/student-search";
-import { listCreatedConventions } from "@/lib/convention-list";
+import {
+  hasConventionBeenCreated,
+  listCreatedConventions,
+} from "@/lib/convention-list";
 import { formatFrenchDateTimeShort } from "@/lib/date-format";
 import { getFundingMethodLabel } from "@/lib/funding-method";
 import { useSlashFocus } from "@/hooks/use-slash-focus";
@@ -84,7 +87,7 @@ export default function ConventionsPage() {
   const triggerPrint = (studentId: string) => {
     const row = rows.find((r) => r.student.id === studentId);
     if (!row) return;
-    if (!row.student.conventionCreatedAt) {
+    if (!hasConventionBeenCreated(row.student, state.students)) {
       updateStudent(studentId, {
         conventionCreatedAt: new Date().toISOString(),
       });
@@ -201,6 +204,12 @@ export default function ConventionsPage() {
                         >
                           {row.student.firstName} {row.student.lastName}
                         </Link>
+                        {row.linkedToStudent ? (
+                          <span className="mt-0.5 block truncate text-xs font-normal text-indigo-700 dark:text-violet-300">
+                            Rattaché à {row.linkedToStudent.firstName}{" "}
+                            {row.linkedToStudent.lastName}
+                          </span>
+                        ) : null}
                         {row.student.funderName ? (
                           <span className="mt-0.5 block truncate text-xs font-normal text-muted-foreground">
                             {row.student.funderName}

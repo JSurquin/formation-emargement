@@ -51,6 +51,8 @@ function rowToStudent(row: {
   funderSiret: string | null;
   funderEmail: string | null;
   conventionSignedAt: string | null;
+  conventionCreatedAt: string | null;
+  linkedConventionStudentId: string | null;
   presenceConfirmedForSessionId: string | null;
   documents: unknown;
 }): Student {
@@ -69,6 +71,8 @@ function rowToStudent(row: {
     funderSiret: row.funderSiret ?? undefined,
     funderEmail: row.funderEmail ?? undefined,
     conventionSignedAt: row.conventionSignedAt ?? undefined,
+    conventionCreatedAt: row.conventionCreatedAt ?? undefined,
+    linkedConventionStudentId: row.linkedConventionStudentId ?? undefined,
     presenceConfirmedForSessionId:
       row.presenceConfirmedForSessionId ?? undefined,
     documents: asStudentDocuments(row.documents),
@@ -113,7 +117,7 @@ export async function POST(request: Request, { params }: Params) {
       );
     }
 
-    const [studentRow, meta, sessionsRows] = await Promise.all([
+    const [studentRow, meta, sessionsRows, studentRows] = await Promise.all([
       prisma.student.findUnique({ where: { id: studentId } }),
       prisma.appMeta.findUnique({ where: { id: "default" } }),
       prisma.trainingSession.findMany({
@@ -128,6 +132,7 @@ export async function POST(request: Request, { params }: Params) {
           trainer: true,
         },
       }),
+      prisma.student.findMany(),
     ]);
 
     if (!studentRow) {
@@ -138,6 +143,7 @@ export async function POST(request: Request, { params }: Params) {
     }
 
     const student = rowToStudent(studentRow);
+    const students = studentRows.map(rowToStudent);
     const organizationName = meta?.organizationName ?? "";
     const sessions = sessionsRows.map(rowToSession);
     const upcomingSession = getUpcomingSessionForStudent(studentId, sessions);
@@ -147,7 +153,7 @@ export async function POST(request: Request, { params }: Params) {
     let text = "";
 
     if (kind === "convention") {
-      if (isConventionSigned(student)) {
+      if (isConventionSigned(student, students)) {
         return NextResponse.json(
           { error: "La convention est déjà marquée comme signée." },
           { status: 400 },
@@ -197,7 +203,7 @@ export async function POST(request: Request, { params }: Params) {
       if (!hasIdentityDocument(student)) {
         missing.push("Pièce d'identité (carte d'identité ou passeport)");
       }
-      const { items } = getStudentFollowUp(student, sessions);
+      const { items } = getStudentFollowUp(student, sessions, students);
       if (!items.find((i) => i.id === "profile")?.ok) {
         missing.push("Informations complètes (e-mail et numéro de sécurité sociale)");
       }
