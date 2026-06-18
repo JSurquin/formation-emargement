@@ -8,6 +8,7 @@ import {
   CalendarDays,
   FileText,
   GraduationCap,
+  IdCard,
   LayoutDashboard,
   LogOut,
   Shield,
@@ -67,7 +68,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   const navItems = [
-    ...nav,
+    ...(user?.role === "ELEVE" && user.studentId
+      ? [{ href: `/eleves/${user.studentId}`, label: "Mon espace", icon: IdCard }]
+      : []),
+    ...(user?.role !== "ELEVE"
+      ? nav
+      : []),
     ...(user?.role === "FORMATEUR"
       ? [{ href: "/planning", label: "Planning", icon: CalendarDays }]
       : []),

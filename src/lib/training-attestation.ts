@@ -1,4 +1,8 @@
-import type { Student, TrainingSession } from "./types";
+import type {
+  AttestationSignature,
+  Student,
+  TrainingSession,
+} from "./types";
 
 export type StudentAttendanceSummary = {
   presentMorning: boolean;
@@ -74,4 +78,45 @@ export function listEligibleStudentIds(session: TrainingSession): string[] {
   return session.studentIds.filter((id) =>
     isStudentEligibleForAttestation(session, id),
   );
+}
+
+export function getAttestationSignature(
+  session: TrainingSession,
+  studentId: string,
+): AttestationSignature | null {
+  const sig = session.attestationSignatures?.[studentId];
+  if (!sig?.signatureDataUrl?.startsWith("data:image/")) return null;
+  return sig;
+}
+
+export function isAttestationSignedByTrainer(
+  session: TrainingSession,
+  studentId: string,
+): boolean {
+  return getAttestationSignature(session, studentId) !== null;
+}
+
+export type StudentSignedAttestation = {
+  session: TrainingSession;
+  signature: AttestationSignature;
+};
+
+export function listSignedAttestationsForStudent(
+  studentId: string,
+  sessions: TrainingSession[],
+): StudentSignedAttestation[] {
+  return sessions
+    .filter((session) => isStudentEligibleForAttestation(session, studentId))
+    .map((session) => {
+      const signature = getAttestationSignature(session, studentId);
+      return signature ? { session, signature } : null;
+    })
+    .filter((row): row is StudentSignedAttestation => row !== null)
+    .sort((a, b) => b.session.date.localeCompare(a.session.date));
+}
+
+export function countSignedAttestations(session: TrainingSession): number {
+  return listEligibleStudentIds(session).filter((id) =>
+    isAttestationSignedByTrainer(session, id),
+  ).length;
 }

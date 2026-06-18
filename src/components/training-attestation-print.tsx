@@ -5,6 +5,7 @@ import { getFundingMethodLabel } from "@/lib/funding-method";
 import {
   buildAttestationDurationLabel,
   formatAttestationIssueDate,
+  getAttestationSignature,
   getStudentAttendanceSummary,
 } from "@/lib/training-attestation";
 
@@ -33,6 +34,7 @@ export function TrainingAttestationPrint({
         const duration = buildAttestationDurationLabel(summary);
         const location = session.location?.trim();
         const trainer = session.trainer?.trim();
+        const trainerSignature = getAttestationSignature(session, student.id);
 
         return (
           <article
@@ -114,10 +116,29 @@ export function TrainingAttestationPrint({
                 <p>Le {issueDate}</p>
               </div>
               <div className="min-w-[220px] text-sm">
-                <p className="mb-16 font-medium">Signature et cachet :</p>
-                <div className="border-t border-neutral-400 pt-2 text-xs text-neutral-600">
-                  {orgLabel}
-                </div>
+                <p className="mb-4 font-medium">
+                  Signature du formateur{trainer ? ` (${trainer})` : ""} :
+                </p>
+                {trainerSignature ? (
+                  <div className="space-y-2">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={trainerSignature.signatureDataUrl}
+                      alt="Signature du formateur"
+                      className="max-h-24 max-w-full object-contain"
+                    />
+                    <p className="text-xs text-neutral-600">
+                      Signé le{" "}
+                      {new Date(trainerSignature.signedAt).toLocaleDateString(
+                        "fr-FR",
+                      )}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="mb-16 border-t border-neutral-400 pt-2 text-xs text-neutral-600">
+                    {trainer || orgLabel}
+                  </div>
+                )}
               </div>
             </footer>
 

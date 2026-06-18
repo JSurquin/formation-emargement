@@ -58,6 +58,7 @@ import { ParticipantSearchInput } from "@/components/participant-search-input";
 import { SessionPrintSummary } from "@/components/session-print-summary";
 import { TrainingAttestationPrint } from "@/components/training-attestation-print";
 import { AttestationPrintDialog } from "@/features/emargement/attestation-print-dialog";
+import { AttestationSignDialog } from "@/features/emargement/attestation-sign-dialog";
 import { NoteSnippetsControls } from "@/components/note-snippets-controls";
 import { filterStudentsByQuery } from "@/lib/student-search";
 import { useSlashFocus } from "@/hooks/use-slash-focus";
@@ -67,6 +68,8 @@ import { getSessionSignatureSummary } from "@/lib/session-signature";
 import { buildSessionSummaryPlainText } from "@/lib/session-summary-text";
 import { downloadSessionIcs } from "@/lib/session-ics";
 import { formatFrenchDateLong } from "@/lib/date-format";
+import { countSignedAttestations } from "@/lib/training-attestation";
+import { canManageSessions } from "@/lib/auth-types";
 import { EmargementBulkActions } from "@/features/emargement/emargement-bulk-actions";
 import { recordRecentSessionOpened } from "@/lib/recent-sessions-storage";
 
@@ -87,6 +90,7 @@ export function SessionEmargementClient({ sessionId }: { sessionId: string }) {
     hydrated,
     setPresent,
     setSignature,
+    setAttestationSignatures,
     addStudentsToSession,
     removeStudentFromSession,
     updateSessionNotes,
@@ -107,6 +111,8 @@ export function SessionEmargementClient({ sessionId }: { sessionId: string }) {
   const [metaLocation, setMetaLocation] = React.useState("");
   const [metaTrainer, setMetaTrainer] = React.useState("");
   const [attestationDialogOpen, setAttestationDialogOpen] =
+    React.useState(false);
+  const [attestationSignDialogOpen, setAttestationSignDialogOpen] =
     React.useState(false);
   const [attestationPrintIds, setAttestationPrintIds] = React.useState<
     string[] | null
@@ -409,6 +415,23 @@ export function SessionEmargementClient({ sessionId }: { sessionId: string }) {
               <Award className="size-4 shrink-0" />
               <span className="whitespace-nowrap">Attestations</span>
             </Button>
+            {user && canManageSessions(user.role) ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="shrink-0 gap-2 rounded-full border-border/80"
+                onClick={() => setAttestationSignDialogOpen(true)}
+                disabled={students.length === 0}
+              >
+                <PenLine className="size-4 shrink-0" />
+                <span className="whitespace-nowrap">
+                  Signer attestations
+                  {session
+                    ? ` (${countSignedAttestations(session)})`
+                    : ""}
+                </span>
+              </Button>
+            ) : null}
             <Button
               type="button"
               variant="outline"
@@ -972,6 +995,20 @@ export function SessionEmargementClient({ sessionId }: { sessionId: string }) {
         session={session}
         students={students}
         onPrint={triggerAttestationPrint}
+      />
+      <AttestationSignDialog
+        open={attestationSignDialogOpen}
+        onOpenChange={setAttestationSignDialogOpen}
+        session={session}
+        students={students}
+        onSign={(studentIds, signatureDataUrl) =>
+          setAttestationSignatures(
+            session.id,
+            studentIds,
+            signatureDataUrl,
+            user?.id,
+          )
+        }
       />
       </div>
 

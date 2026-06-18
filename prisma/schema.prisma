@@ -56,6 +56,7 @@ model TrainingSession {
   trainerUserId  String?
   trainerUser    User?     @relation("SessionTrainer", fields: [trainerUserId], references: [id], onDelete: SetNull)
   trainerDocuments Json?
+  attestationSignatures Json?
   createdAt      DateTime?
   lastActivityAt DateTime?
   attendance     Json

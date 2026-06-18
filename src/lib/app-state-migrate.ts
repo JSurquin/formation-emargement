@@ -1,6 +1,6 @@
 import type { AppState } from "./types";
 
-export const APP_STATE_SCHEMA_VERSION = 5;
+export const APP_STATE_SCHEMA_VERSION = 6;
 
 /**
  * Normalise un état chargé (localStorage ou import) vers le schéma courant.
@@ -51,6 +51,15 @@ export function migrateAppState(state: AppState): AppState {
         ...s,
         funderName: s.funderName?.trim() || undefined,
         funderSiret: s.funderSiret?.replace(/\s/g, "") || undefined,
+      })),
+    };
+  }
+  if (v < 6) {
+    next = {
+      ...next,
+      sessions: next.sessions.map((sess) => ({
+        ...sess,
+        attestationSignatures: sess.attestationSignatures ?? undefined,
       })),
     };
   }

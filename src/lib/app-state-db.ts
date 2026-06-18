@@ -13,6 +13,7 @@ import type {
   Student,
   StudentDocument,
   TrainerDocument,
+  AttestationSignature,
   TrainingSession,
 } from "@/lib/types";
 import type { FundingMethod } from "@/lib/funding-method";
@@ -166,6 +167,25 @@ function rowToStudent(row: {
   };
 }
 
+function asAttestationSignatures(
+  value: Prisma.JsonValue | null,
+): Record<string, AttestationSignature> | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const out: Record<string, AttestationSignature> = {};
+  for (const [studentId, raw] of Object.entries(value)) {
+    if (
+      raw &&
+      typeof raw === "object" &&
+      !Array.isArray(raw) &&
+      typeof (raw as AttestationSignature).signatureDataUrl === "string" &&
+      typeof (raw as AttestationSignature).signedAt === "string"
+    ) {
+      out[studentId] = raw as AttestationSignature;
+    }
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
 function rowToSession(row: {
   id: string;
   title: string;
@@ -178,6 +198,7 @@ function rowToSession(row: {
   location: string | null;
   trainer: string | null;
   trainerDocuments: Prisma.JsonValue | null;
+  attestationSignatures: Prisma.JsonValue | null;
   createdAt: Date | null;
   lastActivityAt: Date | null;
   attendance: Prisma.JsonValue;
@@ -196,6 +217,7 @@ function rowToSession(row: {
     location: row.location ?? undefined,
     trainer: row.trainer ?? undefined,
     trainerDocuments: asTrainerDocuments(row.trainerDocuments),
+    attestationSignatures: asAttestationSignatures(row.attestationSignatures),
     createdAt: row.createdAt?.toISOString(),
     lastActivityAt: row.lastActivityAt?.toISOString(),
     attendance: asAttendance(row.attendance),
@@ -329,6 +351,11 @@ export async function saveAppStateToDb(state: AppState): Promise<void> {
         session.trainerDocuments?.length
           ? session.trainerDocuments
           : PrismaNamespace.DbNull;
+      const attestationSignatures =
+        session.attestationSignatures &&
+        Object.keys(session.attestationSignatures).length
+          ? session.attestationSignatures
+          : PrismaNamespace.DbNull;
       await tx.trainingSession.upsert({
         where: { id: session.id },
         create: {
@@ -343,6 +370,7 @@ export async function saveAppStateToDb(state: AppState): Promise<void> {
           location: session.location ?? null,
           trainer: session.trainer ?? null,
           trainerDocuments,
+          attestationSignatures,
           createdAt: parseIsoDate(session.createdAt),
           lastActivityAt: parseIsoDate(session.lastActivityAt),
           attendance: session.attendance,
@@ -358,6 +386,7 @@ export async function saveAppStateToDb(state: AppState): Promise<void> {
           location: session.location ?? null,
           trainer: session.trainer ?? null,
           trainerDocuments,
+          attestationSignatures,
           createdAt: parseIsoDate(session.createdAt),
           lastActivityAt: parseIsoDate(session.lastActivityAt),
           attendance: session.attendance,

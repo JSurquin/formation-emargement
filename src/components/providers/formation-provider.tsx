@@ -42,6 +42,9 @@ function cloneSession(sess: TrainingSession): TrainingSession {
   return {
     ...sess,
     studentIds: [...sess.studentIds],
+    attestationSignatures: sess.attestationSignatures
+      ? { ...sess.attestationSignatures }
+      : undefined,
     attendance: {
       morning: { ...sess.attendance.morning },
       afternoon: { ...sess.attendance.afternoon },
@@ -98,6 +101,12 @@ type FormationContextValue = {
     studentId: string,
     half: HalfDay,
     signatureDataUrl: string | null,
+  ) => void;
+  setAttestationSignatures: (
+    sessionId: string,
+    studentIds: string[],
+    signatureDataUrl: string,
+    signedByUserId?: string,
   ) => void;
   updateSessionNotes: (sessionId: string, notes: string) => void;
   duplicateSession: (sessionId: string) => void;
@@ -428,10 +437,18 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
           const afternoon = { ...sess.attendance.afternoon };
           delete morning[studentId];
           delete afternoon[studentId];
+          const attestationSignatures = sess.attestationSignatures
+            ? { ...sess.attestationSignatures }
+            : undefined;
+          if (attestationSignatures) delete attestationSignatures[studentId];
           return {
             ...sess,
             studentIds: sess.studentIds.filter((id) => id !== studentId),
             attendance: { morning, afternoon },
+            attestationSignatures: attestationSignatures &&
+              Object.keys(attestationSignatures).length
+              ? attestationSignatures
+              : undefined,
             lastActivityAt: new Date().toISOString(),
           };
         }),
@@ -781,6 +798,38 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
+  const setAttestationSignatures = React.useCallback(
+    (
+      sessionId: string,
+      studentIds: string[],
+      signatureDataUrl: string,
+      signedByUserId?: string,
+    ) => {
+      const signedAt = new Date().toISOString();
+      setState((s) => ({
+        ...s,
+        sessions: s.sessions.map((sess) => {
+          if (sess.id !== sessionId) return sess;
+          const next = { ...(sess.attestationSignatures ?? {}) };
+          for (const studentId of studentIds) {
+            if (!sess.studentIds.includes(studentId)) continue;
+            next[studentId] = {
+              signatureDataUrl,
+              signedAt,
+              signedByUserId,
+            };
+          }
+          return {
+            ...sess,
+            attestationSignatures: Object.keys(next).length ? next : undefined,
+            lastActivityAt: signedAt,
+          };
+        }),
+      }));
+    },
+    [],
+  );
+
   const value = React.useMemo(
     () => ({
       state,
@@ -797,6 +846,7 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
       removeStudentFromSession,
       setPresent,
       setSignature,
+      setAttestationSignatures,
       updateSessionNotes,
       duplicateSession,
       setOrganizationName,
@@ -826,6 +876,7 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
       removeStudentFromSession,
       setPresent,
       setSignature,
+      setAttestationSignatures,
       updateSessionNotes,
       duplicateSession,
       setOrganizationName,

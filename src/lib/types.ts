@@ -8,6 +8,13 @@ export type AttendanceSlot = {
   signedAt: string | null;
 };
 
+/** Signature formateur sur l’attestation de fin de formation d’un stagiaire. */
+export type AttestationSignature = {
+  signatureDataUrl: string;
+  signedAt: string;
+  signedByUserId?: string;
+};
+
 /** Document administratif pour le formateur (ordre de mission, etc.). */
 export type TrainerDocument = {
   id: string;
@@ -82,6 +89,8 @@ export type TrainingSession = {
   trainerUserId?: string;
   /** Documents à disposition du formateur (ordre de mission, etc.). */
   trainerDocuments?: TrainerDocument[];
+  /** Attestations signées par le formateur, indexées par id élève. */
+  attestationSignatures?: Record<string, AttestationSignature>;
   /** Horodatage de création (ISO). */
   createdAt?: string;
   /** Dernière modification utile (présences, signatures, méta…). */

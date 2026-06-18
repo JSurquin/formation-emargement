@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   buildAttestationDurationLabel,
+  countSignedAttestations,
   getStudentAttendanceSummary,
+  isAttestationSignedByTrainer,
   isStudentEligibleForAttestation,
   listEligibleStudentIds,
+  listSignedAttestationsForStudent,
 } from "./training-attestation";
 import type { TrainingSession } from "./types";
 import { buildAttendanceForStudents } from "./types";
@@ -70,5 +73,25 @@ describe("training-attestation", () => {
         ),
       ),
     ).toBe("demi-journée (après-midi)");
+  });
+
+  it("détecte les attestations signées par le formateur", () => {
+    const session = sessionWithPresence(["a", "b"], { a: true }, { b: true });
+    expect(isAttestationSignedByTrainer(session, "a")).toBe(false);
+    expect(countSignedAttestations(session)).toBe(0);
+
+    session.attestationSignatures = {
+      a: {
+        signatureDataUrl: "data:image/png;base64,abc",
+        signedAt: "2024-06-02T10:00:00.000Z",
+      },
+    };
+    expect(isAttestationSignedByTrainer(session, "a")).toBe(true);
+    expect(isAttestationSignedByTrainer(session, "b")).toBe(false);
+    expect(countSignedAttestations(session)).toBe(1);
+
+    const rows = listSignedAttestationsForStudent("a", [session]);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.session.id).toBe("s1");
   });
 });

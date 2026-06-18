@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import {
   ArrowLeft,
   CheckCircle2,
+  Award,
   CircleAlert,
   Download,
   ExternalLink,
@@ -18,6 +19,7 @@ import {
   Upload,
 } from "lucide-react";
 import { useFormation } from "@/components/providers/formation-provider";
+import { useAuth } from "@/components/providers/auth-provider";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -67,6 +69,11 @@ import {
   type StudentProfilePrintMode,
 } from "@/components/student-profile-print";
 
+import { formatFrenchDateLong } from "@/lib/date-format";
+import {
+  listSignedAttestationsForStudent,
+} from "@/lib/training-attestation";
+import { TrainingAttestationPrint } from "@/components/training-attestation-print";
 import { formatSiret } from "@/lib/convention-print";
 import type { Funder } from "@/lib/funder";
 import type { StudentDocument } from "@/lib/types";
@@ -78,11 +85,14 @@ const DOCUMENT_PRESETS = [
 
 export function StudentProfileClient({ studentId }: { studentId: string }) {
   const router = useRouter();
+  const { user } = useAuth();
   const { state, hydrated, updateStudent } = useFormation();
   const student = state.students.find((s) => s.id === studentId);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [profilePrintMode, setProfilePrintMode] =
     React.useState<StudentProfilePrintMode | null>(null);
+  const [attestationPrintSessionId, setAttestationPrintSessionId] =
+    React.useState<string | null>(null);
 
   const [firstName, setFirstName] = React.useState("");
   const [lastName, setLastName] = React.useState("");
@@ -165,6 +175,17 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
     };
   }, [profilePrintMode]);
 
+  React.useEffect(() => {
+    if (!attestationPrintSessionId) return;
+    const reset = () => setAttestationPrintSessionId(null);
+    window.addEventListener("afterprint", reset);
+    const t = window.setTimeout(() => window.print(), 80);
+    return () => {
+      window.removeEventListener("afterprint", reset);
+      window.clearTimeout(t);
+    };
+  }, [attestationPrintSessionId]);
+
   const triggerProfilePrint = (mode: StudentProfilePrintMode) => {
     if (mode === "convention" && student && !student.conventionCreatedAt) {
       updateStudent(student.id, {
@@ -188,6 +209,19 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
     if (!student) return null;
     return getStudentFollowUp(student, state.sessions);
   }, [student, state.sessions]);
+
+  const signedAttestations = React.useMemo(
+    () => listSignedAttestationsForStudent(studentId, state.sessions),
+    [studentId, state.sessions],
+  );
+
+  const attestationPrintSession = React.useMemo(
+    () =>
+      attestationPrintSessionId
+        ? state.sessions.find((s) => s.id === attestationPrintSessionId)
+        : undefined,
+    [attestationPrintSessionId, state.sessions],
+  );
 
   const conventionSessionStudents = React.useMemo(() => {
     if (!followUp?.upcomingSession) return [];
@@ -416,6 +450,28 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
     );
   }
 
+  if (
+    user?.role === "ELEVE" &&
+    user.studentId &&
+    user.studentId !== studentId
+  ) {
+    return (
+      <div className="space-y-6 text-center">
+        <p className="text-muted-foreground">
+          Cet espace est réservé à votre propre fiche candidat.
+        </p>
+        <Link
+          href={`/eleves/${user.studentId}`}
+          className={cn(buttonVariants(), "rounded-full")}
+        >
+          Mon espace
+        </Link>
+      </div>
+    );
+  }
+
+  const isStudentSpace = user?.role === "ELEVE" && user.studentId === studentId;
+
   const profileComplete = isStudentProfileComplete(student);
 
   return (
@@ -424,7 +480,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
       data-profile-print-mode={profilePrintMode ?? "none"}
     >
       <PageHeader
-        eyebrow="Fiche candidat"
+        eyebrow={isStudentSpace ? "Mon espace" : "Fiche candidat"}
         title={
           <>
             {student.firstName} {student.lastName}
@@ -440,6 +496,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
         }
         description={`Coordonnées, financement, numéro de sécurité sociale (CPF / Heliopie) et justificatifs d'inscription. Présent sur ${sessionCount} feuille${sessionCount > 1 ? "s" : ""}.`}
         actions={
+          isStudentSpace ? null : (
           <Link
             href="/eleves"
             className={cn(
@@ -450,8 +507,68 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
             <ArrowLeft className="size-4" />
             Annuaire
           </Link>
+          )
         }
       />
+
+      {signedAttestations.length > 0 ? (
+        <Card className="dg-surface ring-0">
+          <CardHeader className="border-b border-border/50 pb-4 dark:border-white/10">
+            <CardTitle className="flex items-center gap-2 font-heading text-lg">
+              <Award className="size-5 text-indigo-600 dark:text-violet-300" />
+              {isStudentSpace ? "Mes attestations de formation" : "Attestations signées"}
+            </CardTitle>
+            <CardDescription>
+              {isStudentSpace
+                ? "Documents signés par votre formateur, disponibles au téléchargement ou à l'impression."
+                : "Attestations de fin de formation signées numériquement par le formateur."}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 pt-6">
+            <ul className="space-y-3">
+              {signedAttestations.map(({ session, signature }) => (
+                <li
+                  key={session.id}
+                  className="flex flex-col gap-3 rounded-xl border border-border/70 bg-muted/20 p-4 sm:flex-row sm:items-center sm:justify-between dark:border-white/10"
+                >
+                  <div className="min-w-0">
+                    <p className="font-medium">{session.title}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {formatFrenchDateLong(session.date)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Signée le{" "}
+                      {new Date(signature.signedAt).toLocaleDateString("fr-FR")}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="default"
+                    size="sm"
+                    className="shrink-0 gap-2 rounded-full self-start sm:self-center"
+                    onClick={() => {
+                      setAttestationPrintSessionId(session.id);
+                      toast.success(
+                        "Attestation prête — choisissez « Enregistrer en PDF » dans la fenêtre d'impression si besoin.",
+                      );
+                    }}
+                  >
+                    <Printer className="size-4" />
+                    Imprimer / PDF
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      ) : isStudentSpace ? (
+        <Card className="dg-surface ring-0">
+          <CardContent className="py-8 text-center text-sm text-muted-foreground">
+            Aucune attestation signée pour le moment. Elles apparaîtront ici dès
+            que votre formateur les aura validées.
+          </CardContent>
+        </Card>
+      ) : null}
 
       <form onSubmit={onSave} className="space-y-8">
         <Card className="dg-surface ring-0">
@@ -1040,6 +1157,17 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
           session={followUp?.upcomingSession}
           sessionStudents={conventionSessionStudents}
         />
+      ) : null}
+
+      {attestationPrintSession && student ? (
+        <div data-print-mode="attestation">
+          <TrainingAttestationPrint
+            organizationName={state.organizationName}
+            session={attestationPrintSession}
+            students={[student]}
+            formatFrenchDate={formatFrenchDateLong}
+          />
+        </div>
       ) : null}
     </div>
   );
