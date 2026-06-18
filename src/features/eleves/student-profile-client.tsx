@@ -963,7 +963,9 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
                     <Label htmlFor="attach-convention">Convention existante</Label>
                     <Select
                       value={attachConventionId}
-                      onValueChange={setAttachConventionId}
+                      onValueChange={(value) =>
+                        setAttachConventionId(value ?? "")
+                      }
                     >
                       <SelectTrigger
                         id="attach-convention"
