@@ -18,7 +18,7 @@ function downloadText(content: string, filename: string, mime: string) {
 }
 
 export function exportStudentsCsv(students: Student[], filename: string) {
-  const header = ["Prénom", "Nom", "E-mail", "Téléphone", "Structure"]
+  const header = ["Prénom", "Nom", "E-mail", "Téléphone", "Structure", "N° sécu. sociale"]
     .map(csvCell)
     .join(";");
   const rows = students.map((s) =>
@@ -28,6 +28,7 @@ export function exportStudentsCsv(students: Student[], filename: string) {
       s.email ?? "",
       s.phone ?? "",
       s.company ?? "",
+      s.socialSecurityNumber ?? "",
     ]
       .map(csvCell)
       .join(";"),

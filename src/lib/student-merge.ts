@@ -21,6 +21,11 @@ export function mergeStudentsIntoLocal(
         email: s.email !== undefined ? s.email : cur.email,
         phone: s.phone !== undefined ? s.phone : cur.phone,
         company: s.company !== undefined ? s.company : cur.company,
+        socialSecurityNumber:
+          s.socialSecurityNumber !== undefined
+            ? s.socialSecurityNumber
+            : cur.socialSecurityNumber,
+        documents: s.documents !== undefined ? s.documents : cur.documents,
       });
     } else {
       studentById.set(s.id, { ...s });

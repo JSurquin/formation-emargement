@@ -6,6 +6,7 @@ import {
   Contact,
   Copy,
   Download,
+  ExternalLink,
   FileJson,
   Mail,
   Pencil,
@@ -13,9 +14,10 @@ import {
   Upload,
   UserPlus,
 } from "lucide-react";
+import Link from "next/link";
 import { useFormation } from "@/components/providers/formation-provider";
 import { GradientAccent, PageHeader } from "@/components/page-header";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -52,6 +54,7 @@ import { downloadStudentsJson } from "@/lib/export-students-json";
 import { parseStudentsCsv } from "@/lib/import-students-csv";
 import { parseStudentsJsonArray } from "@/lib/import-students-json";
 import { countSessionsPerStudent } from "@/lib/student-session-counts";
+import { validateStudentRequiredFields } from "@/lib/student-profile";
 import type { Student } from "@/lib/types";
 
 function initials(first: string, last: string) {
@@ -74,6 +77,7 @@ export default function ElevesPage() {
   const [email, setEmail] = React.useState("");
   const [phone, setPhone] = React.useState("");
   const [company, setCompany] = React.useState("");
+  const [socialSecurityNumber, setSocialSecurityNumber] = React.useState("");
   const [qAnnuaire, setQAnnuaire] = React.useState("");
   const [editOpen, setEditOpen] = React.useState(false);
   const [editStudent, setEditStudent] = React.useState<Student | null>(null);
@@ -82,6 +86,7 @@ export default function ElevesPage() {
   const [eem, setEem] = React.useState("");
   const [eph, setEph] = React.useState("");
   const [eco, setEco] = React.useState("");
+  const [essn, setEssn] = React.useState("");
   const importStudentsCsvRef = React.useRef<HTMLInputElement>(null);
   const importStudentsJsonRef = React.useRef<HTMLInputElement>(null);
 
@@ -102,6 +107,7 @@ export default function ElevesPage() {
     setEem(editStudent.email ?? "");
     setEph(editStudent.phone ?? "");
     setEco(editStudent.company ?? "");
+    setEssn(editStudent.socialSecurityNumber ?? "");
   }, [editStudent]);
 
   useSlashFocus("annuaire-search", hydrated);
@@ -170,23 +176,31 @@ export default function ElevesPage() {
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!firstName.trim() || !lastName.trim()) {
-      toast.error("Prénom et nom sont obligatoires.");
+    const err = validateStudentRequiredFields({
+      firstName,
+      lastName,
+      email,
+      socialSecurityNumber,
+    });
+    if (err) {
+      toast.error(err);
       return;
     }
     addStudent({
       firstName: firstName.trim(),
       lastName: lastName.trim(),
-      email: email.trim() || undefined,
+      email: email.trim(),
       phone: phone.trim() || undefined,
       company: company.trim() || undefined,
+      socialSecurityNumber: socialSecurityNumber.replace(/\s/g, ""),
     });
     setFirstName("");
     setLastName("");
     setEmail("");
     setPhone("");
     setCompany("");
-    toast.success("Élève ajouté.");
+    setSocialSecurityNumber("");
+    toast.success("Élève ajouté — complétez la fiche candidat si besoin.");
   };
 
   const openEdit = (s: Student) => {
@@ -197,16 +211,23 @@ export default function ElevesPage() {
   const onEditSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editStudent) return;
-    if (!efn.trim() || !eln.trim()) {
-      toast.error("Prénom et nom sont obligatoires.");
+    const err = validateStudentRequiredFields({
+      firstName: efn,
+      lastName: eln,
+      email: eem,
+      socialSecurityNumber: essn,
+    });
+    if (err) {
+      toast.error(err);
       return;
     }
     updateStudent(editStudent.id, {
       firstName: efn.trim(),
       lastName: eln.trim(),
-      email: eem.trim() || undefined,
+      email: eem.trim(),
       phone: eph.trim() || undefined,
       company: eco.trim() || undefined,
+      socialSecurityNumber: essn.replace(/\s/g, ""),
     });
     setEditOpen(false);
     setEditStudent(null);
@@ -222,7 +243,7 @@ export default function ElevesPage() {
             Vos <GradientAccent>élèves</GradientAccent>
           </>
         }
-        description="Carnet global de vos stagiaires. Chaque session a sa propre liste : vous choisissez qui y est inclus à la création ou depuis la feuille d’émargement. Touche / pour la recherche. Import CSV : en-têtes prénom, nom ; optionnel : email, téléphone, société (séparateur , ou ;). Import JSON : tableau de fiches ou objet { « students » } (mêmes champs que l’export annuaire)."
+        description="Carnet global de vos stagiaires. Chaque fiche candidat regroupe coordonnées, numéro de sécurité sociale et justificatifs. E-mail et NIR obligatoires à la création. Import CSV : en-têtes prénom, nom ; optionnel : email, téléphone, société, NIR (séparateur , ou ;)."
         actions={
           <div className="flex w-full flex-wrap gap-2 sm:w-auto">
             {state.students.length > 0 ? (
@@ -341,8 +362,8 @@ export default function ElevesPage() {
             Ajouter un élève
           </CardTitle>
           <CardDescription className="text-base">
-            Les nouveaux profils seront disponibles pour les ajouter aux
-            sessions (case à cocher ou bouton sur la feuille).
+            E-mail et numéro de sécurité sociale obligatoires. Les justificatifs
+            (carte d&apos;identité, etc.) s&apos;ajoutent sur la fiche candidat.
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
@@ -369,14 +390,31 @@ export default function ElevesPage() {
                 />
               </div>
               <div className="grid min-w-0 flex-[2] gap-2 sm:min-w-[200px]">
-                <Label htmlFor="em">E-mail (optionnel)</Label>
+                <Label htmlFor="em">
+                  E-mail <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   id="em"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="email"
+                  required
                   className="bg-background/80"
+                />
+              </div>
+              <div className="grid min-w-0 flex-[2] gap-2 sm:min-w-[220px]">
+                <Label htmlFor="ssn">
+                  N° sécu. sociale <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="ssn"
+                  value={socialSecurityNumber}
+                  onChange={(e) => setSocialSecurityNumber(e.target.value)}
+                  placeholder="13 ou 15 chiffres"
+                  required
+                  inputMode="numeric"
+                  className="bg-background/80 font-mono"
                 />
               </div>
               <Button
@@ -480,9 +518,12 @@ export default function ElevesPage() {
                       </Avatar>
                     </TableCell>
                     <TableCell className="min-w-0">
-                      <span className="font-medium">
+                      <Link
+                        href={`/eleves/${s.id}`}
+                        className="font-medium text-indigo-700 underline-offset-2 hover:underline dark:text-violet-200"
+                      >
                         {s.firstName} {s.lastName}
-                      </span>
+                      </Link>
                       {s.company ? (
                         <span className="mt-0.5 block truncate text-xs text-muted-foreground">
                           {s.company}
@@ -518,6 +559,16 @@ export default function ElevesPage() {
                     </TableCell>
                     <TableCell className="pr-6 text-right">
                       <div className="flex justify-end gap-0.5">
+                        <Link
+                          href={`/eleves/${s.id}`}
+                          className={cn(
+                            buttonVariants({ variant: "ghost", size: "icon" }),
+                            "rounded-full text-muted-foreground hover:bg-muted",
+                          )}
+                          aria-label={`Ouvrir la fiche candidat de ${s.firstName} ${s.lastName}`}
+                        >
+                          <ExternalLink className="size-4" />
+                        </Link>
                         <Button
                           type="button"
                           variant="ghost"
@@ -617,13 +668,29 @@ export default function ElevesPage() {
                 </div>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-em">E-mail</Label>
+                <Label htmlFor="edit-em">
+                  E-mail <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   id="edit-em"
                   type="email"
                   value={eem}
                   onChange={(e) => setEem(e.target.value)}
+                  required
                   className="bg-background/80"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-ssn">
+                  N° sécu. sociale <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="edit-ssn"
+                  value={essn}
+                  onChange={(e) => setEssn(e.target.value)}
+                  required
+                  inputMode="numeric"
+                  className="bg-background/80 font-mono"
                 />
               </div>
               <div className="grid gap-2">
@@ -646,7 +713,13 @@ export default function ElevesPage() {
                 />
               </div>
             </div>
-            <DialogFooter>
+            <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between">
+              <Link
+                href={`/eleves/${editStudent?.id ?? ""}`}
+                className={buttonVariants({ variant: "outline" })}
+              >
+                Fiche complète
+              </Link>
               <Button type="submit" className="btn-gradient">
                 Enregistrer
               </Button>

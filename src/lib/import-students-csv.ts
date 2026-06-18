@@ -83,6 +83,14 @@ export function parseStudentsCsv(text: string): ParsedStudentRow[] | null {
   const iEm = pickColumn(headers, ["email", "e-mail", "courriel", "mail"]);
   const iPh = pickColumn(headers, ["telephone", "tel", "phone", "mobile"]);
   const iCo = pickColumn(headers, ["societe", "company", "employeur", "structure"]);
+  const iSsn = pickColumn(headers, [
+    "nir",
+    "nss",
+    "numero securite sociale",
+    "numero de securite sociale",
+    "securite sociale",
+    "social security",
+  ]);
 
   const out: ParsedStudentRow[] = [];
   for (let r = 1; r < lines.length; r++) {
@@ -102,6 +110,10 @@ export function parseStudentsCsv(text: string): ParsedStudentRow[] | null {
     if (iCo >= 0) {
       const co = (cells[iCo] ?? "").trim();
       if (co) row.company = co;
+    }
+    if (iSsn >= 0) {
+      const ssn = (cells[iSsn] ?? "").replace(/\s/g, "");
+      if (ssn) row.socialSecurityNumber = ssn;
     }
     out.push(row);
   }

@@ -225,6 +225,9 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
           email: input.email?.trim() || undefined,
           phone: input.phone?.trim() || undefined,
           company: input.company?.trim() || undefined,
+          socialSecurityNumber:
+            input.socialSecurityNumber?.replace(/\s/g, "") || undefined,
+          documents: input.documents?.length ? input.documents : undefined,
         },
       ],
     }));
@@ -247,6 +250,11 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
             next.phone = patch.phone.trim() || undefined;
           if (patch.company !== undefined)
             next.company = patch.company.trim() || undefined;
+          if (patch.socialSecurityNumber !== undefined)
+            next.socialSecurityNumber =
+              patch.socialSecurityNumber.replace(/\s/g, "") || undefined;
+          if (patch.documents !== undefined)
+            next.documents = patch.documents.length ? patch.documents : undefined;
           return next;
         }),
       }));
@@ -307,6 +315,8 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
         id: newId(),
         firstName: orig.firstName.trim(),
         lastName: `${orig.lastName.trim()} (copie)`,
+        socialSecurityNumber: undefined,
+        documents: undefined,
       };
       return { ...s, students: [...s.students, dup] };
     });

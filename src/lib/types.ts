@@ -6,6 +6,19 @@ export type AttendanceSlot = {
   signedAt: string | null;
 };
 
+/** Pièce jointe sur la fiche candidat (stockée localement en data URL). */
+export type StudentDocument = {
+  id: string;
+  /** Libellé affiché (ex. « Carte d'identité »). */
+  label: string;
+  /** identity = pièce d'identité ; other = autre justificatif. */
+  kind: "identity" | "other";
+  fileName: string;
+  mimeType: string;
+  dataUrl: string;
+  uploadedAt: string;
+};
+
 export type Student = {
   id: string;
   firstName: string;
@@ -14,6 +27,10 @@ export type Student = {
   phone?: string;
   /** Structure / employeur (affichage & export). */
   company?: string;
+  /** Numéro de sécurité sociale (NIR) — requis à la création, utile CPF / Heliopie. */
+  socialSecurityNumber?: string;
+  /** Justificatifs d'inscription (carte d'identité, etc.). */
+  documents?: StudentDocument[];
 };
 
 export type TrainingSession = {
