@@ -31,6 +31,12 @@ export function mergeStudentsIntoLocal(
           s.franceTravailId !== undefined
             ? s.franceTravailId
             : cur.franceTravailId,
+        trainingLevel:
+          s.trainingLevel !== undefined ? s.trainingLevel : cur.trainingLevel,
+        trainingPositioningNotes:
+          s.trainingPositioningNotes !== undefined
+            ? s.trainingPositioningNotes
+            : cur.trainingPositioningNotes,
         fundingMethod:
           s.fundingMethod !== undefined ? s.fundingMethod : cur.fundingMethod,
         funderName:

@@ -31,6 +31,8 @@ function isStudent(x: unknown): boolean {
     optionalString(x.socialSecurityNumber) &&
     optionalString(x.dateOfBirth) &&
     optionalString(x.franceTravailId) &&
+    optionalString(x.trainingLevel) &&
+    optionalString(x.trainingPositioningNotes) &&
     optionalString(x.fundingMethod) &&
     optionalString(x.funderName) &&
     optionalString(x.funderSiret) &&

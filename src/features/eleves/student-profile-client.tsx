@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -49,6 +50,10 @@ import {
 } from "@/lib/student-profile";
 import { cn } from "@/lib/utils";
 import { FUNDING_METHOD_OPTIONS, type FundingMethod } from "@/lib/funding-method";
+import {
+  TRAINING_LEVEL_OPTIONS,
+  type TrainingLevel,
+} from "@/lib/training-positioning";
 import {
   getStudentFollowUp,
   hasIdentityDocument,
@@ -116,6 +121,11 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
   const [socialSecurityNumber, setSocialSecurityNumber] = React.useState("");
   const [dateOfBirth, setDateOfBirth] = React.useState("");
   const [franceTravailId, setFranceTravailId] = React.useState("");
+  const [trainingLevel, setTrainingLevel] = React.useState<TrainingLevel | "">(
+    "",
+  );
+  const [trainingPositioningNotes, setTrainingPositioningNotes] =
+    React.useState("");
   const [fundingMethod, setFundingMethod] = React.useState<
     FundingMethod | ""
   >("");
@@ -147,6 +157,8 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
     );
     setDateOfBirth(student.dateOfBirth ?? "");
     setFranceTravailId(student.franceTravailId ?? "");
+    setTrainingLevel(student.trainingLevel ?? "");
+    setTrainingPositioningNotes(student.trainingPositioningNotes ?? "");
     setFundingMethod(student.fundingMethod ?? "");
     setFunderName(student.funderName ?? "");
     setFunderSiret(
@@ -427,6 +439,8 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
       socialSecurityNumber: socialSecurityNumber.replace(/\s/g, ""),
       dateOfBirth: dateOfBirth.trim() || undefined,
       franceTravailId: franceTravailId.trim() || undefined,
+      trainingLevel: trainingLevel || undefined,
+      trainingPositioningNotes: trainingPositioningNotes.trim() || undefined,
       fundingMethod: fundingMethod || undefined,
       funderName: funderName.trim() || undefined,
       funderSiret: funderSiret.replace(/\s/g, "") || undefined,
@@ -816,6 +830,56 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
               sert aussi aux relances convention et documents manquants (financement
               employeur).
             </p>
+          </CardContent>
+        </Card>
+
+        <Card className="dg-surface ring-0">
+          <CardHeader className="border-b border-border/50 pb-4 dark:border-white/10">
+            <CardTitle className="font-heading text-lg">
+              Positionnement pédagogique
+            </CardTitle>
+            <CardDescription>
+              Niveau du candidat sur la formation visée (bases, facilités…).
+              Ces informations aident le formateur à adapter son contenu.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4 pt-6">
+            <div className="grid gap-2 sm:max-w-md">
+              <Label htmlFor="profile-training-level">Niveau sur la formation</Label>
+              <Select
+                value={trainingLevel || "none"}
+                onValueChange={(v) =>
+                  setTrainingLevel(v === "none" ? "" : (v as TrainingLevel))
+                }
+              >
+                <SelectTrigger id="profile-training-level" className="bg-background/80">
+                  <SelectValue placeholder="Choisir un niveau" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Non renseigné</SelectItem>
+                  {TRAINING_LEVEL_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="profile-training-notes">Précisions</Label>
+              <Textarea
+                id="profile-training-notes"
+                value={trainingPositioningNotes}
+                onChange={(e) => setTrainingPositioningNotes(e.target.value)}
+                placeholder="ex. Déjà utilisé Excel au travail, souhaite approfondir les tableaux croisés dynamiques…"
+                rows={4}
+                className="bg-background/80"
+              />
+              <p className="text-xs text-muted-foreground">
+                Facultatif : prérequis, expérience antérieure, points de vigilance
+                ou attentes particulières.
+              </p>
+            </div>
           </CardContent>
         </Card>
 

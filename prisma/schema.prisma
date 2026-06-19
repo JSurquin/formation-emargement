@@ -32,6 +32,8 @@ model Student {
   socialSecurityNumber String?
   dateOfBirth          String?
   franceTravailId      String?
+  trainingLevel        String?
+  trainingPositioningNotes String?
   fundingMethod        String?
   funderName           String?
   funderSiret          String?

@@ -20,6 +20,7 @@ import type {
 } from "@/lib/types";
 import type { FundingMethod } from "@/lib/funding-method";
 import { isFundingMethod } from "@/lib/funding-method";
+import { isTrainingLevel } from "@/lib/training-positioning";
 
 function asStringArray(value: Prisma.JsonValue): string[] {
   if (!Array.isArray(value)) return [];
@@ -157,6 +158,8 @@ function rowToStudent(row: {
   socialSecurityNumber: string | null;
   dateOfBirth: string | null;
   franceTravailId: string | null;
+  trainingLevel: string | null;
+  trainingPositioningNotes: string | null;
   fundingMethod: string | null;
   funderName: string | null;
   funderSiret: string | null;
@@ -177,6 +180,10 @@ function rowToStudent(row: {
     socialSecurityNumber: row.socialSecurityNumber ?? undefined,
     dateOfBirth: row.dateOfBirth ?? undefined,
     franceTravailId: row.franceTravailId ?? undefined,
+    trainingLevel: isTrainingLevel(row.trainingLevel ?? "")
+      ? row.trainingLevel
+      : undefined,
+    trainingPositioningNotes: row.trainingPositioningNotes ?? undefined,
     fundingMethod: isFundingMethod(row.fundingMethod ?? "")
       ? (row.fundingMethod as FundingMethod)
       : undefined,
@@ -406,6 +413,8 @@ export async function saveAppStateToDb(state: AppState): Promise<void> {
           socialSecurityNumber: student.socialSecurityNumber ?? null,
           dateOfBirth: student.dateOfBirth ?? null,
           franceTravailId: student.franceTravailId ?? null,
+          trainingLevel: student.trainingLevel ?? null,
+          trainingPositioningNotes: student.trainingPositioningNotes ?? null,
           fundingMethod: student.fundingMethod ?? null,
           funderName: student.funderName ?? null,
           funderSiret: student.funderSiret ?? null,
@@ -426,6 +435,8 @@ export async function saveAppStateToDb(state: AppState): Promise<void> {
           socialSecurityNumber: student.socialSecurityNumber ?? null,
           dateOfBirth: student.dateOfBirth ?? null,
           franceTravailId: student.franceTravailId ?? null,
+          trainingLevel: student.trainingLevel ?? null,
+          trainingPositioningNotes: student.trainingPositioningNotes ?? null,
           fundingMethod: student.fundingMethod ?? null,
           funderName: student.funderName ?? null,
           funderSiret: student.funderSiret ?? null,

@@ -7,6 +7,7 @@ import {
 } from "@/lib/convention-print";
 import { formatFrenchDateLong, formatFrenchDateShort } from "@/lib/date-format";
 import { getFundingMethodLabel } from "@/lib/funding-method";
+import { getTrainingLevelLabel } from "@/lib/training-positioning";
 import { formatSocialSecurityNumber } from "@/lib/student-profile";
 import { formatAttestationIssueDate } from "@/lib/training-attestation";
 
@@ -291,6 +292,14 @@ export function StudentProfilePrint({
           <FieldRow
             label="Identifiant France Travail"
             value={student.franceTravailId}
+          />
+          <FieldRow
+            label="Niveau sur la formation"
+            value={getTrainingLevelLabel(student.trainingLevel)}
+          />
+          <FieldRow
+            label="Positionnement (précisions)"
+            value={student.trainingPositioningNotes}
           />
           <FieldRow
             label="Moyen de financement"

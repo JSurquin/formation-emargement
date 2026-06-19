@@ -69,6 +69,7 @@ import { getSessionSignatureSummary } from "@/lib/session-signature";
 import { buildSessionSummaryPlainText } from "@/lib/session-summary-text";
 import { downloadSessionIcs } from "@/lib/session-ics";
 import { formatFrenchDateLong } from "@/lib/date-format";
+import { formatTrainingPositioning } from "@/lib/training-positioning";
 import { countSignedAttestations } from "@/lib/training-attestation";
 import { canManageSessions } from "@/lib/auth-types";
 import { EmargementBulkActions } from "@/features/emargement/emargement-bulk-actions";
@@ -348,7 +349,14 @@ export function SessionEmargementClient({ sessionId }: { sessionId: string }) {
                   className="border-border/50 transition-colors hover:bg-muted/30 dark:border-white/5 dark:hover:bg-white/5"
                 >
                   <TableCell className="pl-4 font-medium sm:pl-6">
-                    {st.firstName} {st.lastName}
+                    <div>
+                      {st.firstName} {st.lastName}
+                    </div>
+                    {formatTrainingPositioning(st) ? (
+                      <p className="mt-0.5 text-xs font-normal text-muted-foreground">
+                        {formatTrainingPositioning(st)}
+                      </p>
+                    ) : null}
                   </TableCell>
                   {user && canManageSessions(user.role) ? (
                     <TableCell>

@@ -1,4 +1,5 @@
 import type { FundingMethod } from "./funding-method";
+import type { TrainingLevel } from "./training-positioning";
 
 export type HalfDay = "morning" | "afternoon";
 
@@ -77,6 +78,10 @@ export type Student = {
   dateOfBirth?: string;
   /** Identifiant France Travail du candidat (demandeur d'emploi). */
   franceTravailId?: string;
+  /** Niveau sur la formation visée (positionnement pédagogique). */
+  trainingLevel?: TrainingLevel;
+  /** Précisions libres : facilités, prérequis, attentes… */
+  trainingPositioningNotes?: string;
   /** Moyen de financement (CPF, OPCO, employeur…) — convention & dossiers. */
   fundingMethod?: FundingMethod;
   /** Nom du financeur (OPCO, employeur…) — convention. */

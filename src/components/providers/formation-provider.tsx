@@ -269,6 +269,9 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
             input.socialSecurityNumber?.replace(/\s/g, "") || undefined,
           dateOfBirth: input.dateOfBirth?.trim() || undefined,
           franceTravailId: input.franceTravailId?.trim() || undefined,
+          trainingLevel: input.trainingLevel || undefined,
+          trainingPositioningNotes:
+            input.trainingPositioningNotes?.trim() || undefined,
           fundingMethod: input.fundingMethod || undefined,
           funderName: input.funderName?.trim() || undefined,
           funderSiret: input.funderSiret?.replace(/\s/g, "") || undefined,
@@ -309,6 +312,11 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
             next.dateOfBirth = patch.dateOfBirth.trim() || undefined;
           if (patch.franceTravailId !== undefined)
             next.franceTravailId = patch.franceTravailId.trim() || undefined;
+          if (patch.trainingLevel !== undefined)
+            next.trainingLevel = patch.trainingLevel || undefined;
+          if (patch.trainingPositioningNotes !== undefined)
+            next.trainingPositioningNotes =
+              patch.trainingPositioningNotes.trim() || undefined;
           if (patch.fundingMethod !== undefined)
             next.fundingMethod = patch.fundingMethod || undefined;
           if (patch.funderName !== undefined)
