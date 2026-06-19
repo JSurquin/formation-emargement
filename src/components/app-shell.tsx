@@ -35,12 +35,17 @@ const nav = [
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, loading, logout } = useAuth();
 
   const isAuthPage =
     pathname.startsWith("/login") ||
     pathname.startsWith("/inscription") ||
     pathname.startsWith("/sign/");
+
+  React.useEffect(() => {
+    if (isAuthPage || loading || user) return;
+    router.replace(`/login?next=${encodeURIComponent(pathname)}`);
+  }, [isAuthPage, loading, pathname, router, user]);
 
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -71,9 +76,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     ...(user?.role === "ELEVE" && user.studentId
       ? [{ href: `/eleves/${user.studentId}`, label: "Mon espace", icon: IdCard }]
       : []),
-    ...(user?.role !== "ELEVE"
-      ? nav
-      : []),
+    ...(user && user.role !== "ELEVE" ? nav : []),
     ...(user?.role === "FORMATEUR"
       ? [{ href: "/planning", label: "Planning", icon: CalendarDays }]
       : []),
