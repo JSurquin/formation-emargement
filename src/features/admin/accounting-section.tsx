@@ -91,11 +91,6 @@ export function AdminAccountingSection() {
     [state.students, state.sessions],
   );
 
-  const rows = React.useMemo(
-    () => listAccountingRows(state.students, state.sessions, tab),
-    [state.students, state.sessions, tab],
-  );
-
   const cpfRows = React.useMemo(
     () => listCpfAccountingRows(state.students, state.sessions),
     [state.students, state.sessions],
@@ -189,7 +184,13 @@ export function AdminAccountingSection() {
               ))}
             </TabsList>
 
-            {TAB_ORDER.map((category) => (
+            {TAB_ORDER.map((category) => {
+              const rows = listAccountingRows(
+                state.students,
+                state.sessions,
+                category,
+              );
+              return (
               <TabsContent key={category} value={category} className="mt-0">
                 {rows.length === 0 ? (
                   <p className="rounded-lg border border-dashed border-border/70 px-4 py-8 text-center text-sm text-muted-foreground dark:border-white/10">
@@ -373,7 +374,8 @@ export function AdminAccountingSection() {
                   </div>
                 )}
               </TabsContent>
-            ))}
+              );
+            })}
           </Tabs>
         )}
       </CardContent>

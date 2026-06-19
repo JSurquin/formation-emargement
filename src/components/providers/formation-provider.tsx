@@ -152,6 +152,7 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
   const lastRemovedSessionRef = React.useRef<TrainingSession | null>(null);
   const lastRemovedStudentRef = React.useRef<Student | null>(null);
   const saveErrorToastRef = React.useRef(false);
+  const persistEnabledRef = React.useRef(false);
   const stateRef = React.useRef(state);
   stateRef.current = state;
 
@@ -199,6 +200,7 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
           setHydrated(true);
           const migrated = await saveAppStateToApi(local);
           if (migrated.ok) {
+            persistEnabledRef.current = true;
             localStorage.removeItem(FORMATION_STORAGE_KEY);
             toast.success("Vos données locales ont été transférées sur le serveur.");
           }
@@ -206,6 +208,7 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
         }
       }
       setState(remote);
+      persistEnabledRef.current = true;
       setHydrated(true);
     })();
     return () => {
@@ -214,13 +217,13 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
   }, [isPublicPage]);
 
   React.useEffect(() => {
-    if (!hydrated || isPublicPage) return;
+    if (!hydrated || !persistEnabledRef.current || isPublicPage) return;
     const t = window.setTimeout(persist, 400);
     return () => window.clearTimeout(t);
   }, [state, hydrated, persist, isPublicPage]);
 
   React.useEffect(() => {
-    if (!hydrated || isPublicPage) return;
+    if (!hydrated || !persistEnabledRef.current || isPublicPage) return;
     const flush = persist;
     const onVis = () => {
       if (document.visibilityState === "hidden") flush();

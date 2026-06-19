@@ -193,24 +193,58 @@ function asAttestationSignatures(
   return Object.keys(out).length ? out : undefined;
 }
 
+function optionalAccountingString(
+  value: unknown,
+): string | undefined | null {
+  if (value === undefined || value === null) return undefined;
+  return typeof value === "string" ? value : null;
+}
+
+function normalizeSessionAccountingEntry(
+  raw: unknown,
+): SessionStudentAccounting | null {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+
+  const entry = raw as SessionStudentAccounting;
+  const invoiceSentAt = optionalAccountingString(entry.invoiceSentAt);
+  const paymentReceivedAt = optionalAccountingString(entry.paymentReceivedAt);
+  const cpfEntryNotifiedAt = optionalAccountingString(entry.cpfEntryNotifiedAt);
+  const cpfExitNotifiedAt = optionalAccountingString(entry.cpfExitNotifiedAt);
+  const notes =
+    entry.notes === undefined || entry.notes === null
+      ? undefined
+      : typeof entry.notes === "string"
+        ? entry.notes
+        : null;
+
+  if (
+    invoiceSentAt === null ||
+    paymentReceivedAt === null ||
+    cpfEntryNotifiedAt === null ||
+    cpfExitNotifiedAt === null ||
+    notes === null
+  ) {
+    return null;
+  }
+
+  const out: SessionStudentAccounting = {};
+  if (invoiceSentAt) out.invoiceSentAt = invoiceSentAt;
+  if (paymentReceivedAt) out.paymentReceivedAt = paymentReceivedAt;
+  if (cpfEntryNotifiedAt) out.cpfEntryNotifiedAt = cpfEntryNotifiedAt;
+  if (cpfExitNotifiedAt) out.cpfExitNotifiedAt = cpfExitNotifiedAt;
+  if (notes?.trim()) out.notes = notes.trim();
+
+  return Object.keys(out).length ? out : null;
+}
+
 function asSessionAccounting(
   value: Prisma.JsonValue | null,
 ): Record<string, SessionStudentAccounting> | undefined {
   if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
   const out: Record<string, SessionStudentAccounting> = {};
   for (const [studentId, raw] of Object.entries(value)) {
-    if (!raw || typeof raw !== "object" || Array.isArray(raw)) continue;
-    const entry = raw as SessionStudentAccounting;
-    if (
-      (entry.invoiceSentAt !== undefined &&
-        typeof entry.invoiceSentAt !== "string") ||
-      (entry.paymentReceivedAt !== undefined &&
-        typeof entry.paymentReceivedAt !== "string") ||
-      (entry.notes !== undefined && typeof entry.notes !== "string")
-    ) {
-      continue;
-    }
-    out[studentId] = entry;
+    const entry = normalizeSessionAccountingEntry(raw);
+    if (entry) out[studentId] = entry;
   }
   return Object.keys(out).length ? out : undefined;
 }
