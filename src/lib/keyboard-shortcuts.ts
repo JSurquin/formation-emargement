@@ -1,3 +1,6 @@
+import type { UserRole } from "@/lib/auth-types";
+import { isStaffRole } from "@/lib/auth-types";
+
 export type AppRouterLike = { push: (href: string) => void };
 
 export type KeyboardHelpRow = {
@@ -57,48 +60,49 @@ export function handleAppShellNavigationKey(
   e: KeyboardEvent,
   pathname: string,
   router: AppRouterLike,
-  options: { onOpenNewSession: () => void },
+  options: { onOpenNewSession: () => void; userRole?: UserRole | null },
 ): boolean {
   if (e.ctrlKey || e.metaKey || e.altKey) return false;
 
   const k = e.key;
+  const staff = options.userRole ? isStaffRole(options.userRole) : true;
 
-  if (k === "h" || k === "H") {
+  if (staff && (k === "h" || k === "H")) {
     if (pathname === "/") return false;
     e.preventDefault();
     router.push("/");
     return true;
   }
 
-  if (k === "e" || k === "E") {
+  if (staff && (k === "e" || k === "E")) {
     if (pathname.startsWith("/eleves")) return false;
     e.preventDefault();
     router.push("/eleves");
     return true;
   }
 
-  if (k === "f" || k === "F") {
+  if (staff && (k === "f" || k === "F")) {
     if (pathname.startsWith("/formations")) return false;
     e.preventDefault();
     router.push("/formations");
     return true;
   }
 
-  if (k === "c" || k === "C") {
+  if (staff && (k === "c" || k === "C")) {
     if (pathname.startsWith("/conventions")) return false;
     e.preventDefault();
     router.push("/conventions");
     return true;
   }
 
-  if (k === "s" || k === "S") {
+  if (staff && (k === "s" || k === "S")) {
     if (pathname.startsWith("/statistiques")) return false;
     e.preventDefault();
     router.push("/statistiques");
     return true;
   }
 
-  if (k === "n" || k === "N") {
+  if (staff && (k === "n" || k === "N")) {
     if (pathname !== "/") return false;
     e.preventDefault();
     options.onOpenNewSession();

@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   Users,
 } from "lucide-react";
+import { useAuth } from "@/components/providers/auth-provider";
 import { useFormation } from "@/components/providers/formation-provider";
 import {
   Dialog,
@@ -20,6 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { formatFrenchDateShort } from "@/lib/date-format";
+import { isStaffRole } from "@/lib/auth-types";
 import { filterSessionsByQuery } from "@/lib/session-search";
 import { cn } from "@/lib/utils";
 
@@ -33,7 +35,9 @@ const quickLinks = [
 
 export function CommandPalette() {
   const router = useRouter();
+  const { user } = useAuth();
   const { state, hydrated } = useFormation();
+  const staff = user ? isStaffRole(user.role) : false;
   const [open, setOpen] = React.useState(false);
   const [q, setQ] = React.useState("");
   const inputRef = React.useRef<HTMLInputElement>(null);
@@ -65,7 +69,7 @@ export function CommandPalette() {
     router.push(href);
   };
 
-  if (!hydrated) return null;
+  if (!hydrated || !staff) return null;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

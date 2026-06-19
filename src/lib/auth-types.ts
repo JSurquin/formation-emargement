@@ -28,3 +28,7 @@ export function canManageSessions(role: UserRole): boolean {
 export function canManageStudents(role: UserRole): boolean {
   return role === "SUPER_ADMIN" || role === "FORMATEUR";
 }
+
+export function isStaffRole(role: UserRole): boolean {
+  return canManageSessions(role);
+}

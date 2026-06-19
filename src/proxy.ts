@@ -3,7 +3,14 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { AUTH_COOKIE_NAME, type UserRole } from "@/lib/auth-types";
 
-const PUBLIC_PREFIXES = ["/login", "/inscription", "/sign/", "/api/auth/"];
+const PUBLIC_PREFIXES = [
+  "/login",
+  "/inscription",
+  "/sign/",
+  "/api/auth/",
+  "/api/sign/",
+  "/api/build-id",
+];
 const ADMIN_PREFIX = "/admin";
 const ADMIN_API_PREFIX = "/api/admin/";
 const STAFF_ROLES: UserRole[] = ["SUPER_ADMIN", "FORMATEUR"];
@@ -38,6 +45,7 @@ function requiredRolesForPath(pathname: string): UserRole[] | null {
   if (
     pathname === "/" ||
     pathname === "/eleves" ||
+    pathname.startsWith("/formations") ||
     pathname.startsWith("/conventions") ||
     pathname.startsWith("/statistiques") ||
     pathname.startsWith("/sessions/")

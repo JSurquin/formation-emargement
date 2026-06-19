@@ -54,6 +54,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       if (isTypingTarget(e.target)) return;
       if (
         handleAppShellNavigationKey(e, pathname, router, {
+          userRole: user?.role,
           onOpenNewSession: () =>
             window.dispatchEvent(new CustomEvent("digiforma:open-new-session")),
         })
@@ -63,7 +64,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [pathname, router]);
+  }, [pathname, router, user?.role]);
 
   if (isAuthPage) {
     return (
