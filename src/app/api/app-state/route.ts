@@ -21,6 +21,7 @@ function filterAppStateForStudent(
     sessions,
     noteSnippets: [],
     sessionTemplates: [],
+    trainingCatalog: [],
   };
 }
 

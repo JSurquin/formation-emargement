@@ -9,6 +9,8 @@ import {
   type SessionTemplate,
   type Student,
   type SessionStudentAccounting,
+  type TrainingCatalogEntry,
+  type TrainingCatalogDocument,
   type TrainingSession,
   buildAttendanceForStudents,
   emptySlot,
@@ -134,6 +136,22 @@ type FormationContextValue = {
   removeNoteSnippet: (index: number) => void;
   addSessionTemplate: (name: string, studentIds: string[]) => void;
   removeSessionTemplate: (id: string) => void;
+  addTrainingCatalogEntry: (input: {
+    title: string;
+    description?: string;
+    duration?: string;
+    reference?: string;
+  }) => void;
+  updateTrainingCatalogEntry: (
+    id: string,
+    patch: Partial<
+      Pick<
+        TrainingCatalogEntry,
+        "title" | "description" | "duration" | "reference" | "documents"
+      >
+    >,
+  ) => void;
+  removeTrainingCatalogEntry: (id: string) => void;
 };
 
 const FormationContext = React.createContext<FormationContextValue | null>(
@@ -627,6 +645,7 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
         organizationName: next.organizationName ?? "",
         noteSnippets: next.noteSnippets ?? [],
         sessionTemplates: next.sessionTemplates ?? [],
+        trainingCatalog: next.trainingCatalog ?? [],
       }),
     );
   }, []);
@@ -759,6 +778,85 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
     setState((s) => ({
       ...s,
       sessionTemplates: (s.sessionTemplates ?? []).filter((t) => t.id !== id),
+    }));
+  }, []);
+
+  const addTrainingCatalogEntry = React.useCallback(
+    (input: {
+      title: string;
+      description?: string;
+      duration?: string;
+      reference?: string;
+    }) => {
+      const title = input.title.trim();
+      if (!title) return;
+      const now = new Date().toISOString();
+      const entry: TrainingCatalogEntry = {
+        id: newId(),
+        title,
+        description: input.description?.trim() || undefined,
+        duration: input.duration?.trim() || undefined,
+        reference: input.reference?.trim() || undefined,
+        documents: undefined,
+        createdAt: now,
+        updatedAt: now,
+      };
+      setState((s) => ({
+        ...s,
+        trainingCatalog: [...(s.trainingCatalog ?? []), entry],
+      }));
+    },
+    [],
+  );
+
+  const updateTrainingCatalogEntry = React.useCallback(
+    (
+      id: string,
+      patch: Partial<
+        Pick<
+          TrainingCatalogEntry,
+          "title" | "description" | "duration" | "reference" | "documents"
+        >
+      >,
+    ) => {
+      setState((s) => ({
+        ...s,
+        trainingCatalog: (s.trainingCatalog ?? []).map((entry) => {
+          if (entry.id !== id) return entry;
+          const next: TrainingCatalogEntry = {
+            ...entry,
+            updatedAt: new Date().toISOString(),
+          };
+          if (patch.title !== undefined) {
+            const title = patch.title.trim();
+            if (!title) return entry;
+            next.title = title;
+          }
+          if (patch.description !== undefined) {
+            next.description = patch.description.trim() || undefined;
+          }
+          if (patch.duration !== undefined) {
+            next.duration = patch.duration.trim() || undefined;
+          }
+          if (patch.reference !== undefined) {
+            next.reference = patch.reference.trim() || undefined;
+          }
+          if (patch.documents !== undefined) {
+            next.documents = patch.documents.length
+              ? (patch.documents as TrainingCatalogDocument[])
+              : undefined;
+          }
+          return next;
+        }),
+      }));
+    },
+    [],
+  );
+
+  const removeTrainingCatalogEntry = React.useCallback((id: string) => {
+    setState((s) => ({
+      ...s,
+      trainingCatalog: (s.trainingCatalog ?? []).filter((e) => e.id !== id),
     }));
   }, []);
 
@@ -932,6 +1030,9 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
       removeNoteSnippet,
       addSessionTemplate,
       removeSessionTemplate,
+      addTrainingCatalogEntry,
+      updateTrainingCatalogEntry,
+      removeTrainingCatalogEntry,
     }),
     [
       state,
@@ -963,6 +1064,9 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
       removeNoteSnippet,
       addSessionTemplate,
       removeSessionTemplate,
+      addTrainingCatalogEntry,
+      updateTrainingCatalogEntry,
+      removeTrainingCatalogEntry,
     ],
   );
 

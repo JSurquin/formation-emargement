@@ -18,6 +18,7 @@ model AppMeta {
   organizationName String   @default("")
   noteSnippets     Json     @default("[]")
   sessionTemplates Json     @default("[]")
+  trainingCatalog  Json     @default("[]")
   updatedAt        DateTime @updatedAt
 }
 

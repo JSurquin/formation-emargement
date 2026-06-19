@@ -1,4 +1,4 @@
-import type { AppState, SessionTemplate } from "./types";
+import type { AppState, SessionTemplate, TrainingCatalogEntry } from "./types";
 import {
   APP_STATE_SCHEMA_VERSION,
   migrateAppState,
@@ -24,6 +24,22 @@ function normalizeTemplates(raw: unknown): SessionTemplate[] {
   return out;
 }
 
+function normalizeTrainingCatalog(raw: unknown): TrainingCatalogEntry[] {
+  if (!Array.isArray(raw)) return [];
+  const out: TrainingCatalogEntry[] = [];
+  for (const item of raw) {
+    if (
+      item &&
+      typeof item === "object" &&
+      typeof (item as TrainingCatalogEntry).id === "string" &&
+      typeof (item as TrainingCatalogEntry).title === "string"
+    ) {
+      out.push(item as TrainingCatalogEntry);
+    }
+  }
+  return out;
+}
+
 export const FORMATION_STORAGE_KEY = "digiforma-like-state-v1";
 
 export const defaultAppState: AppState = {
@@ -33,6 +49,7 @@ export const defaultAppState: AppState = {
   organizationName: "",
   noteSnippets: [],
   sessionTemplates: [],
+  trainingCatalog: [],
 };
 
 export function loadAppState(): AppState {
@@ -50,6 +67,7 @@ export function loadAppState(): AppState {
         ? parsed.noteSnippets.filter((x) => typeof x === "string")
         : [],
       sessionTemplates: normalizeTemplates(parsed.sessionTemplates),
+      trainingCatalog: normalizeTrainingCatalog(parsed.trainingCatalog),
     };
     return migrateAppState(merged);
   } catch {
@@ -77,6 +95,7 @@ export async function loadAppStateFromApi(): Promise<
         ? parsed.noteSnippets.filter((x) => typeof x === "string")
         : [],
       sessionTemplates: normalizeTemplates(parsed.sessionTemplates),
+      trainingCatalog: normalizeTrainingCatalog(parsed.trainingCatalog),
     };
     return migrateAppState(merged);
   } catch {

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   BarChart3,
+  BookOpen,
   CalendarDays,
   FileText,
   GraduationCap,
@@ -28,6 +29,7 @@ import { cn } from "@/lib/utils";
 const nav = [
   { href: "/", label: "Sessions", icon: LayoutDashboard },
   { href: "/eleves", label: "Élèves", icon: Users },
+  { href: "/formations", label: "Formations", icon: BookOpen },
   { href: "/conventions", label: "Conventions", icon: FileText },
   { href: "/statistiques", label: "Stats", icon: BarChart3 },
 ];

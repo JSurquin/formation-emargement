@@ -4,6 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import {
   BarChart3,
+  BookOpen,
   FileText,
   GraduationCap,
   LayoutDashboard,
@@ -25,6 +26,7 @@ import { cn } from "@/lib/utils";
 const quickLinks = [
   { href: "/", label: "Accueil — sessions", icon: LayoutDashboard },
   { href: "/eleves", label: "Annuaire élèves", icon: Users },
+  { href: "/formations", label: "Catalogue formations", icon: BookOpen },
   { href: "/conventions", label: "Conventions", icon: FileText },
   { href: "/statistiques", label: "Statistiques", icon: BarChart3 },
 ] as const;

@@ -1,4 +1,4 @@
-import type { AppState, SessionTemplate, TrainingSession } from "./types";
+import type { AppState, SessionTemplate, TrainingCatalogEntry, TrainingSession } from "./types";
 import { newId } from "./id";
 import { mergeStudentsIntoLocal } from "./student-merge";
 
@@ -63,11 +63,31 @@ export function mergeAppStates(local: AppState, incoming: AppState): AppState {
     }
   }
 
+  const trainingCatalog: TrainingCatalogEntry[] = [
+    ...(local.trainingCatalog ?? []),
+  ];
+  const seenCatalog = new Set(trainingCatalog.map((e) => e.id));
+  for (const entry of incoming.trainingCatalog ?? []) {
+    if (seenCatalog.has(entry.id)) {
+      const nid = newId();
+      trainingCatalog.push({
+        ...entry,
+        id: nid,
+        title: `${entry.title.trim()} (import)`,
+      });
+      seenCatalog.add(nid);
+    } else {
+      trainingCatalog.push({ ...entry });
+      seenCatalog.add(entry.id);
+    }
+  }
+
   return {
     students,
     sessions,
     organizationName,
     noteSnippets,
     sessionTemplates,
+    trainingCatalog,
   };
 }

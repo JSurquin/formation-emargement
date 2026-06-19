@@ -1,6 +1,6 @@
 import type { AppState } from "./types";
 
-export const APP_STATE_SCHEMA_VERSION = 9;
+export const APP_STATE_SCHEMA_VERSION = 10;
 
 /**
  * Normalise un état chargé (localStorage ou import) vers le schéma courant.
@@ -88,6 +88,14 @@ export function migrateAppState(state: AppState): AppState {
         ...s,
         franceTravailId: s.franceTravailId?.trim() || undefined,
       })),
+    };
+  }
+  if (v < 10) {
+    next = {
+      ...next,
+      trainingCatalog: next.trainingCatalog?.length
+        ? next.trainingCatalog
+        : undefined,
     };
   }
   return { ...next, schemaVersion: APP_STATE_SCHEMA_VERSION };

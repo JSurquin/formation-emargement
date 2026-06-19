@@ -15,6 +15,7 @@ import type {
   TrainerDocument,
   AttestationSignature,
   SessionStudentAccounting,
+  TrainingCatalogEntry,
   TrainingSession,
 } from "@/lib/types";
 import type { FundingMethod } from "@/lib/funding-method";
@@ -39,6 +40,23 @@ function asSessionTemplates(value: Prisma.JsonValue): SessionTemplate[] {
       (item as SessionTemplate).studentIds.every((id) => typeof id === "string")
     ) {
       out.push(item as SessionTemplate);
+    }
+  }
+  return out;
+}
+
+function asTrainingCatalog(value: Prisma.JsonValue): TrainingCatalogEntry[] {
+  if (!Array.isArray(value)) return [];
+  const out: TrainingCatalogEntry[] = [];
+  for (const item of value) {
+    if (
+      item &&
+      typeof item === "object" &&
+      !Array.isArray(item) &&
+      typeof (item as TrainingCatalogEntry).id === "string" &&
+      typeof (item as TrainingCatalogEntry).title === "string"
+    ) {
+      out.push(item as TrainingCatalogEntry);
     }
   }
   return out;
@@ -309,6 +327,7 @@ export async function loadAppStateFromDb(): Promise<AppState> {
     organizationName: meta?.organizationName ?? "",
     noteSnippets: meta ? asStringArray(meta.noteSnippets) : [],
     sessionTemplates: meta ? asSessionTemplates(meta.sessionTemplates) : [],
+    trainingCatalog: meta ? asTrainingCatalog(meta.trainingCatalog) : [],
     students: students.map(rowToStudent),
     sessions: sessions.map(rowToSession),
   });
@@ -337,12 +356,14 @@ export async function saveAppStateToDb(state: AppState): Promise<void> {
         organizationName: normalized.organizationName ?? "",
         noteSnippets: normalized.noteSnippets ?? [],
         sessionTemplates: normalized.sessionTemplates ?? [],
+        trainingCatalog: normalized.trainingCatalog ?? [],
       },
       update: {
         schemaVersion: APP_STATE_SCHEMA_VERSION,
         organizationName: normalized.organizationName ?? "",
         noteSnippets: normalized.noteSnippets ?? [],
         sessionTemplates: normalized.sessionTemplates ?? [],
+        trainingCatalog: normalized.trainingCatalog ?? [],
       },
     });
 

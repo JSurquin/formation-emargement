@@ -1,4 +1,4 @@
-import type { AppState, SessionTemplate, Student, TrainingSession } from "./types";
+import type { AppState, SessionTemplate, Student, TrainingCatalogEntry, TrainingSession } from "./types";
 import type { SessionJsonBundle } from "./export-session-json";
 
 const EXPORT_VERSION = 1 as const;
@@ -108,6 +108,11 @@ function isSessionTemplate(x: unknown): x is SessionTemplate {
   );
 }
 
+function isTrainingCatalogEntry(x: unknown): x is TrainingCatalogEntry {
+  if (!isRecord(x)) return false;
+  return typeof x.id === "string" && typeof x.title === "string";
+}
+
 /** Valide un export JSON « une session » (fichier produit par l’app). */
 export function parseSessionJsonBundle(raw: unknown): SessionJsonBundle | null {
   if (!isRecord(raw)) return null;
@@ -153,6 +158,13 @@ export function parseAppStateImport(raw: unknown): AppState | null {
   ) {
     return null;
   }
+  const catalog = data.trainingCatalog;
+  if (
+    catalog !== undefined &&
+    (!Array.isArray(catalog) || !catalog.every(isTrainingCatalogEntry))
+  ) {
+    return null;
+  }
   return {
     students: data.students as AppState["students"],
     sessions: data.sessions as AppState["sessions"],
@@ -168,6 +180,13 @@ export function parseAppStateImport(raw: unknown): AppState | null {
             ...t,
             name: t.name.trim(),
           })),
+    trainingCatalog:
+      catalog === undefined
+        ? undefined
+        : (catalog as TrainingCatalogEntry[]).map((e) => ({
+            ...e,
+            title: e.title.trim(),
+          })),
   };
 }
 
@@ -181,6 +200,7 @@ export function buildExportPayload(state: AppState): ExportPayload {
       organizationName: state.organizationName,
       noteSnippets: state.noteSnippets,
       sessionTemplates: state.sessionTemplates,
+      trainingCatalog: state.trainingCatalog,
     },
   };
 }

@@ -139,6 +139,32 @@ export type SessionTemplate = {
   studentIds: string[];
 };
 
+/** Document attaché à une fiche du catalogue formations (programme, brochure…). */
+export type TrainingCatalogDocument = {
+  id: string;
+  label: string;
+  /** program | brochure | other */
+  kind: "program" | "brochure" | "other";
+  fileName: string;
+  mimeType: string;
+  dataUrl: string;
+  uploadedAt: string;
+};
+
+/** Fiche formation du catalogue (annuaire des offres). */
+export type TrainingCatalogEntry = {
+  id: string;
+  title: string;
+  description?: string;
+  /** Durée indicative (ex. « 14 h »). */
+  duration?: string;
+  /** Référence interne ou code formation. */
+  reference?: string;
+  documents?: TrainingCatalogDocument[];
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export type AppState = {
   /** Version du schéma pour migrations locales (voir formation-storage). */
   schemaVersion?: number;
@@ -150,6 +176,8 @@ export type AppState = {
   noteSnippets?: string[];
   /** Modèles de sélection d’élèves (création de session). */
   sessionTemplates?: SessionTemplate[];
+  /** Annuaire des formations (programmes, pièces pour financeurs). */
+  trainingCatalog?: TrainingCatalogEntry[];
 };
 
 export function emptySlot(): AttendanceSlot {
