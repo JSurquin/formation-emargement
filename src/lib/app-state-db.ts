@@ -20,7 +20,10 @@ import type {
 } from "@/lib/types";
 import type { FundingMethod } from "@/lib/funding-method";
 import { isFundingMethod } from "@/lib/funding-method";
-import { isTrainingLevel } from "@/lib/training-positioning";
+import {
+  isTrainingLevel,
+  type TrainingLevel,
+} from "@/lib/training-positioning";
 
 function asStringArray(value: Prisma.JsonValue): string[] {
   if (!Array.isArray(value)) return [];
@@ -181,7 +184,7 @@ function rowToStudent(row: {
     dateOfBirth: row.dateOfBirth ?? undefined,
     franceTravailId: row.franceTravailId ?? undefined,
     trainingLevel: isTrainingLevel(row.trainingLevel ?? "")
-      ? row.trainingLevel
+      ? (row.trainingLevel as TrainingLevel)
       : undefined,
     trainingPositioningNotes: row.trainingPositioningNotes ?? undefined,
     fundingMethod: isFundingMethod(row.fundingMethod ?? "")
