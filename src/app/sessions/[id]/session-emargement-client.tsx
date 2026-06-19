@@ -576,7 +576,7 @@ export function SessionEmargementClient({ sessionId }: { sessionId: string }) {
               }}
             >
               <Mail className="size-4 shrink-0" />
-              <span className="whitespace-nowrap">Envoyer liens émargement</span>
+              <span className="whitespace-nowrap">Envoyer les liens d&apos;émargement</span>
             </Button>
             <Button
               type="button"

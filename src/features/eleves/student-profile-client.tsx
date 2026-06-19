@@ -574,7 +574,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
             ) : null}
           </>
         }
-        description={`Coordonnées, financement, numéro de sécurité sociale (CPF / Heliopie) et justificatifs d'inscription. Présent sur ${sessionCount} feuille${sessionCount > 1 ? "s" : ""}.`}
+        description={`Coordonnées, financement, numéro de sécurité sociale (CPF / Héliopée) et justificatifs d'inscription. Présent sur ${sessionCount} feuille${sessionCount > 1 ? "s" : ""}.`}
         actions={
           isStudentSpace ? null : (
           <Link
@@ -827,7 +827,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
             </div>
             <p className="text-xs text-muted-foreground sm:col-span-2">
               Ces informations apparaissent sur la convention imprimée. L&apos;e-mail
-              sert aussi aux relances convention et documents manquants (financement
+              sert aussi aux relances de convention et aux relances documents manquants (financement
               employeur).
             </p>
           </CardContent>
@@ -1196,7 +1196,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
                   className={profileGhostActionButtonClass}
                   onClick={() => copyReminderText("convention")}
                 >
-                  Copier texte convention
+                  Copier le texte de la convention
                 </Button>
                 <Button
                   type="button"
@@ -1205,7 +1205,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
                   className={profileGhostActionButtonClass}
                   onClick={() => copyReminderText("convention_candidate")}
                 >
-                  Copier texte convention candidat
+                  Copier le texte de la convention (candidat)
                 </Button>
                 <Button
                   type="button"
@@ -1214,7 +1214,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
                   className={profileGhostActionButtonClass}
                   onClick={() => copyReminderText("documents")}
                 >
-                  Copier texte documents
+                  Copier le texte — documents manquants
                 </Button>
                 {followUp?.upcomingSession ? (
                   <>
@@ -1225,7 +1225,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
                       className={profileGhostActionButtonClass}
                       onClick={() => copyReminderText("convocation")}
                     >
-                      Copier texte convocation
+                      Copier le texte de convocation
                     </Button>
                     <Button
                       type="button"
@@ -1234,7 +1234,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
                       className={profileGhostActionButtonClass}
                       onClick={() => copyReminderText("presence")}
                     >
-                      Copier texte présence
+                      Copier le texte de confirmation de présence
                     </Button>
                   </>
                 ) : null}

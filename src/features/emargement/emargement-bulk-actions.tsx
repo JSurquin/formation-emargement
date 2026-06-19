@@ -59,7 +59,7 @@ export function EmargementBulkActions({
                 const ok = await confirm({
                   title: "Réinitialiser le matin ?",
                   description:
-                    "Marquer tous absents au matin et effacer les signatures de cette demi-journée.",
+                    "Marquer tous comme absents au matin et effacer les signatures de cette demi-journée.",
                   confirmLabel: "Réinitialiser",
                   variant: "destructive",
                 });
@@ -79,7 +79,7 @@ export function EmargementBulkActions({
                 const ok = await confirm({
                   title: "Effacer les signatures du matin ?",
                   description:
-                    "Les cases présence restent inchangées ; seules les signatures seront effacées.",
+                    "Les cases de présence restent inchangées ; seules les signatures seront effacées.",
                   confirmLabel: "Effacer",
                   variant: "destructive",
                 });
@@ -88,7 +88,7 @@ export function EmargementBulkActions({
                 toast.success("Signatures du matin effacées.");
               }}
             >
-              Effacer signatures
+              Effacer les signatures
             </Button>
           </div>
         </div>
@@ -118,7 +118,7 @@ export function EmargementBulkActions({
                 const ok = await confirm({
                   title: "Réinitialiser l’après-midi ?",
                   description:
-                    "Marquer tous absents l’après-midi et effacer les signatures de cette demi-journée.",
+                    "Marquer tous comme absents l’après-midi et effacer les signatures de cette demi-journée.",
                   confirmLabel: "Réinitialiser",
                   variant: "destructive",
                 });
@@ -149,7 +149,7 @@ export function EmargementBulkActions({
                 toast.success("Signatures de l’après-midi effacées.");
               }}
             >
-              Effacer signatures
+              Effacer les signatures
             </Button>
           </div>
         </div>

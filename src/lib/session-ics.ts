@@ -47,7 +47,7 @@ export function downloadSessionIcs(
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Formation Emargement//FR",
+    "PRODID:-//Formation Émargement//FR",
     "CALSCALE:GREGORIAN",
     "BEGIN:VEVENT",
     `UID:${uid}`,

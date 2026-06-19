@@ -72,7 +72,7 @@ export type Student = {
   phone?: string;
   /** Structure / employeur (affichage & export). */
   company?: string;
-  /** Numéro de sécurité sociale (NIR) — requis à la création, utile CPF / Heliopie. */
+  /** Numéro de sécurité sociale (NIR) — requis à la création, utile CPF / Héliopée. */
   socialSecurityNumber?: string;
   /** Date de naissance (YYYY-MM-DD). */
   dateOfBirth?: string;
@@ -88,7 +88,7 @@ export type Student = {
   funderName?: string;
   /** N° SIRET du financeur — convention. */
   funderSiret?: string;
-  /** E-mail du financeur (OPCO, employeur…) pour les relances convention. */
+  /** E-mail du financeur (OPCO, employeur…) pour les relances de convention. */
   funderEmail?: string;
   /** Date de signature de la convention (ISO). */
   conventionSignedAt?: string;
