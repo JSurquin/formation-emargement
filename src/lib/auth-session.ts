@@ -44,6 +44,7 @@ export async function createAuthSession(userId: string): Promise<string> {
     sid: session.id,
     uid: userId,
     role: user.role,
+    ...(user.studentId ? { studentId: user.studentId } : {}),
   })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
