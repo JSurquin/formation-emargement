@@ -8,11 +8,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useAuth } from "@/components/providers/auth-provider";
 import { isTypingTarget } from "@/lib/dom-guards";
-import { KEYBOARD_HELP_ROWS } from "@/lib/keyboard-shortcuts";
+import { getKeyboardHelpRowsForRole } from "@/lib/keyboard-shortcuts";
 
 export function KeyboardHelpDialog() {
+  const { user } = useAuth();
   const [open, setOpen] = React.useState(false);
+  const rows = getKeyboardHelpRowsForRole(user?.role);
 
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -38,7 +41,7 @@ export function KeyboardHelpDialog() {
           </DialogDescription>
         </DialogHeader>
         <ul className="space-y-3 text-sm">
-          {KEYBOARD_HELP_ROWS.map((row) => (
+          {rows.map((row) => (
             <li key={row.keys} className="flex gap-3">
               <kbd className="inline-flex min-w-[2.25rem] shrink-0 items-center justify-center rounded-md border border-border/80 bg-muted/50 px-2 py-1 font-mono text-xs font-semibold text-foreground">
                 {row.keys}

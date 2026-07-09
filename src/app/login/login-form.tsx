@@ -15,6 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { toast } from "sonner";
+import { getDefaultHomeForRole } from "@/lib/route-access";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -39,7 +40,11 @@ export default function LoginForm() {
         return;
       }
       toast.success("Connexion réussie.");
-      router.replace(next);
+      const fallback = data.user
+        ? getDefaultHomeForRole(data.user.role, data.user.studentId)
+        : "/";
+      const destination = next === "/" ? fallback : next;
+      router.replace(destination);
       router.refresh();
     } catch {
       toast.error("Connexion impossible.");

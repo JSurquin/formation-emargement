@@ -2,6 +2,10 @@ import { jwtVerify } from "jose";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { AUTH_COOKIE_NAME, type UserRole } from "@/lib/auth-types";
+import {
+  getDefaultHomeForRole,
+  getRequiredRolesForPath,
+} from "@/lib/route-access";
 
 const PUBLIC_PREFIXES = [
   "/login",
@@ -11,9 +15,6 @@ const PUBLIC_PREFIXES = [
   "/api/sign/",
   "/api/build-id",
 ];
-const ADMIN_PREFIX = "/admin";
-const ADMIN_API_PREFIX = "/api/admin/";
-const STAFF_ROLES: UserRole[] = ["SUPER_ADMIN", "FORMATEUR"];
 
 function getAuthSecret(): Uint8Array {
   const secret =
@@ -25,35 +26,6 @@ function isPublicPath(pathname: string): boolean {
   return PUBLIC_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(prefix),
   );
-}
-
-function requiredRolesForPath(pathname: string): UserRole[] | null {
-  if (
-    pathname.startsWith(ADMIN_PREFIX) ||
-    pathname.startsWith(ADMIN_API_PREFIX)
-  ) {
-    return ["SUPER_ADMIN"];
-  }
-
-  if (
-    pathname.startsWith("/planning") ||
-    pathname.startsWith("/api/trainer/")
-  ) {
-    return ["FORMATEUR"];
-  }
-
-  if (
-    pathname === "/" ||
-    pathname === "/eleves" ||
-    pathname.startsWith("/formations") ||
-    pathname.startsWith("/conventions") ||
-    pathname.startsWith("/statistiques") ||
-    pathname.startsWith("/sessions/")
-  ) {
-    return STAFF_ROLES;
-  }
-
-  return null;
 }
 
 type AuthFromToken = {
@@ -77,12 +49,8 @@ async function getAuthFromToken(token: string): Promise<AuthFromToken | null> {
 }
 
 function redirectForRole(auth: AuthFromToken, request: NextRequest): NextResponse {
-  if (auth.role === "ELEVE" && auth.studentId) {
-    return NextResponse.redirect(
-      new URL(`/eleves/${auth.studentId}`, request.url),
-    );
-  }
-  return NextResponse.redirect(new URL("/", request.url));
+  const home = getDefaultHomeForRole(auth.role, auth.studentId);
+  return NextResponse.redirect(new URL(home, request.url));
 }
 
 export async function proxy(request: NextRequest) {
@@ -120,7 +88,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  const requiredRoles = requiredRolesForPath(pathname);
+  const requiredRoles = getRequiredRolesForPath(pathname);
   if (requiredRoles && !requiredRoles.includes(auth.role)) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "Accès refusé." }, { status: 403 });

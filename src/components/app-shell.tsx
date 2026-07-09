@@ -14,9 +14,12 @@ import {
   LogOut,
   Shield,
   Users,
+  type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { ROLE_LABELS } from "@/lib/auth-types";
+import { getDefaultHomeForRole, getNavRoutesForRole } from "@/lib/route-access";
+import type { NavRouteId } from "@/lib/route-access";
 import { Button } from "@/components/ui/button";
 import { AppBackground } from "@/components/app-background";
 import { CommandPalette } from "@/components/command-palette";
@@ -26,13 +29,16 @@ import { isTypingTarget } from "@/lib/dom-guards";
 import { handleAppShellNavigationKey } from "@/lib/keyboard-shortcuts";
 import { cn } from "@/lib/utils";
 
-const nav = [
-  { href: "/", label: "Sessions", icon: LayoutDashboard },
-  { href: "/eleves", label: "Élèves", icon: Users },
-  { href: "/formations", label: "Formations", icon: BookOpen },
-  { href: "/conventions", label: "Conventions", icon: FileText },
-  { href: "/statistiques", label: "Stats", icon: BarChart3 },
-];
+const NAV_ICONS: Record<NavRouteId, LucideIcon> = {
+  "student-space": IdCard,
+  sessions: LayoutDashboard,
+  students: Users,
+  formations: BookOpen,
+  conventions: FileText,
+  stats: BarChart3,
+  planning: CalendarDays,
+  admin: Shield,
+};
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -43,6 +49,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     pathname.startsWith("/login") ||
     pathname.startsWith("/inscription") ||
     pathname.startsWith("/sign/");
+
+  const homeHref = user
+    ? getDefaultHomeForRole(user.role, user.studentId)
+    : "/";
 
   React.useEffect(() => {
     if (isAuthPage || loading || user) return;
@@ -75,18 +85,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const navItems = [
-    ...(user?.role === "ELEVE" && user.studentId
-      ? [{ href: `/eleves/${user.studentId}`, label: "Mon espace", icon: IdCard }]
-      : []),
-    ...(user && user.role !== "ELEVE" ? nav : []),
-    ...(user?.role === "FORMATEUR"
-      ? [{ href: "/planning", label: "Planning", icon: CalendarDays }]
-      : []),
-    ...(user?.role === "SUPER_ADMIN"
-      ? [{ href: "/admin", label: "Admin", icon: Shield }]
-      : []),
-  ];
+  const navItems = user
+    ? getNavRoutesForRole(user.role, user.studentId).map((route) => ({
+        ...route,
+        icon: NAV_ICONS[route.id],
+      }))
+    : [];
 
   return (
     <div className="relative flex min-h-full flex-col">
@@ -101,7 +105,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <header className="no-print sticky top-0 z-50 border-b border-border/60 bg-card/75 pt-[env(safe-area-inset-top,0px)] backdrop-blur-xl dark:border-white/10 dark:bg-card/50">
         <div className="mx-auto flex min-h-14 max-w-6xl items-center gap-2 py-2 pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] sm:min-h-16 sm:gap-6 sm:py-0 sm:pl-[max(1.5rem,env(safe-area-inset-left,0px))] sm:pr-[max(1.5rem,env(safe-area-inset-right,0px))] md:gap-8">
           <Link
-            href="/"
+            href={homeHref}
             className="group flex min-w-0 shrink-0 items-center gap-2 font-heading font-semibold tracking-tight sm:gap-3"
           >
             <span className="relative flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-600/30 transition-transform group-hover:scale-[1.02] dark:from-indigo-500 dark:to-fuchsia-600 dark:shadow-indigo-900/50">
@@ -122,12 +126,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             aria-label="Navigation principale"
           >
             <div className="flex shrink-0 items-center gap-1 rounded-full border border-border/80 bg-muted/40 p-1 dark:border-white/10 dark:bg-black/20">
-            {navItems.map(({ href, label, icon: Icon }) => {
+            {navItems.map(({ href, label, icon: Icon, id }) => {
               const active =
                 href === "/" ? pathname === "/" : pathname.startsWith(href);
               return (
                 <Link
-                  key={href}
+                  key={id}
                   href={href}
                   className={cn(
                     "flex min-h-10 min-w-10 items-center justify-center gap-2 rounded-full px-2.5 py-2 text-sm font-medium transition-all sm:min-w-0 sm:px-3.5",
@@ -173,6 +177,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </header>
 
       <KeyboardHelpDialog />
+
       <CommandPalette />
 
       <main

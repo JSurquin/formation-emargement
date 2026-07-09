@@ -5,10 +5,13 @@ import { useRouter } from "next/navigation";
 import {
   BarChart3,
   BookOpen,
+  CalendarDays,
   FileText,
   GraduationCap,
   LayoutDashboard,
+  Shield,
   Users,
+  type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useFormation } from "@/components/providers/formation-provider";
@@ -22,22 +25,26 @@ import {
 import { Input } from "@/components/ui/input";
 import { formatFrenchDateShort } from "@/lib/date-format";
 import { isStaffRole } from "@/lib/auth-types";
+import { getPaletteRoutesForRole } from "@/lib/route-access";
 import { filterSessionsByQuery } from "@/lib/session-search";
 import { cn } from "@/lib/utils";
 
-const quickLinks = [
-  { href: "/", label: "Accueil — sessions", icon: LayoutDashboard },
-  { href: "/eleves", label: "Annuaire élèves", icon: Users },
-  { href: "/formations", label: "Catalogue formations", icon: BookOpen },
-  { href: "/conventions", label: "Conventions", icon: FileText },
-  { href: "/statistiques", label: "Statistiques", icon: BarChart3 },
-] as const;
+const PALETTE_ICONS: Record<string, LucideIcon> = {
+  "/": LayoutDashboard,
+  "/eleves": Users,
+  "/formations": BookOpen,
+  "/conventions": FileText,
+  "/statistiques": BarChart3,
+  "/planning": CalendarDays,
+  "/admin": Shield,
+};
 
 export function CommandPalette() {
   const router = useRouter();
   const { user } = useAuth();
   const { state, hydrated } = useFormation();
   const staff = user ? isStaffRole(user.role) : false;
+  const quickLinks = user ? getPaletteRoutesForRole(user.role) : [];
   const [open, setOpen] = React.useState(false);
   const [q, setQ] = React.useState("");
   const inputRef = React.useRef<HTMLInputElement>(null);
@@ -105,20 +112,23 @@ export function CommandPalette() {
               <p className="px-2 py-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Pages
               </p>
-              {quickLinks.map(({ href, label, icon: Icon }) => (
-                <button
-                  key={href}
-                  type="button"
-                  className={cn(
-                    "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors",
-                    "hover:bg-muted/80 dark:hover:bg-white/10",
-                  )}
-                  onClick={() => go(href)}
-                >
-                  <Icon className="size-4 shrink-0 text-indigo-600 dark:text-violet-400" />
-                  {label}
-                </button>
-              ))}
+              {quickLinks.map(({ href, label }) => {
+                const Icon = PALETTE_ICONS[href] ?? LayoutDashboard;
+                return (
+                  <button
+                    key={href}
+                    type="button"
+                    className={cn(
+                      "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors",
+                      "hover:bg-muted/80 dark:hover:bg-white/10",
+                    )}
+                    onClick={() => go(href)}
+                  >
+                    <Icon className="size-4 shrink-0 text-indigo-600 dark:text-violet-400" />
+                    {label}
+                  </button>
+                );
+              })}
               {state.sessions.length > 0 ? (
                 <>
                   <p className="mt-3 px-2 py-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
