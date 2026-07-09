@@ -1,15 +1,11 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import { getAuthSecretBytes } from "@/lib/auth-secret";
 import { prisma } from "@/lib/prisma";
 import { AUTH_COOKIE_NAME, type AuthUser } from "@/lib/auth-types";
 
 export { AUTH_COOKIE_NAME };
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 14;
-
-function getAuthSecret(): Uint8Array {
-  const secret = process.env.AUTH_SECRET?.trim() || "dev-insecure-auth-secret-change-me";
-  return new TextEncoder().encode(secret);
-}
 
 function toAuthUser(user: {
   id: string;
@@ -49,7 +45,7 @@ export async function createAuthSession(userId: string): Promise<string> {
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(expiresAt)
-    .sign(getAuthSecret());
+    .sign(getAuthSecretBytes());
 }
 
 export async function deleteAuthSession(token: string): Promise<void> {
@@ -67,7 +63,7 @@ async function verifyAuthToken(
   token: string,
 ): Promise<AuthTokenPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, getAuthSecret());
+    const { payload } = await jwtVerify(token, getAuthSecretBytes());
     if (
       typeof payload.sid !== "string" ||
       typeof payload.uid !== "string"

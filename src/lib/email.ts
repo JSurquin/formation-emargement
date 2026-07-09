@@ -57,6 +57,15 @@ const halfDayLabels: Record<HalfDay, string> = {
   afternoon: "après-midi",
 };
 
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export async function sendAttendanceSignEmail(input: {
   to: string;
   studentName: string;
@@ -78,10 +87,10 @@ export async function sendAttendanceSignEmail(input: {
   ].join("\n");
 
   const html = `
-    <p>Bonjour ${input.studentName},</p>
-    <p>Votre session <strong>${input.sessionTitle}</strong> a lieu le ${input.sessionDate}.</p>
-    <p>Merci de signer votre présence du <strong>${halfLabel}</strong> :</p>
-    <p><a href="${input.signUrl}">${input.signUrl}</a></p>
+    <p>Bonjour ${escapeHtml(input.studentName)},</p>
+    <p>Votre session <strong>${escapeHtml(input.sessionTitle)}</strong> a lieu le ${escapeHtml(input.sessionDate)}.</p>
+    <p>Merci de signer votre présence du <strong>${escapeHtml(halfLabel)}</strong> :</p>
+    <p><a href="${escapeHtml(input.signUrl)}">${escapeHtml(input.signUrl)}</a></p>
     <p><small>Ce lien est personnel et expire après utilisation ou à la fin de la journée.</small></p>
   `;
 
@@ -104,9 +113,9 @@ export async function sendTrainerAssignedEmail(input: {
   ].join("\n");
 
   const html = `
-    <p>Bonjour ${input.trainerName},</p>
-    <p>Vous avez été assigné(e) à la session <strong>${input.sessionTitle}</strong> le ${input.sessionDate}.</p>
-    <p><a href="${input.sessionUrl}">Ouvrir la feuille d'émargement</a></p>
+    <p>Bonjour ${escapeHtml(input.trainerName)},</p>
+    <p>Vous avez été assigné(e) à la session <strong>${escapeHtml(input.sessionTitle)}</strong> le ${escapeHtml(input.sessionDate)}.</p>
+    <p><a href="${escapeHtml(input.sessionUrl)}">Ouvrir la feuille d'émargement</a></p>
   `;
 
   await sendMail({ to: input.to, subject, text, html });
@@ -127,9 +136,9 @@ export async function sendWelcomeEmail(input: {
   ].join("\n");
 
   const html = `
-    <p>Bonjour ${input.name},</p>
-    <p>Votre compte (<strong>${input.roleLabel}</strong>) a été créé.</p>
-    <p><a href="${input.loginUrl}">Se connecter</a></p>
+    <p>Bonjour ${escapeHtml(input.name)},</p>
+    <p>Votre compte (<strong>${escapeHtml(input.roleLabel)}</strong>) a été créé.</p>
+    <p><a href="${escapeHtml(input.loginUrl)}">Se connecter</a></p>
   `;
 
   await sendMail({ to: input.to, subject, text, html });
@@ -138,7 +147,7 @@ export async function sendWelcomeEmail(input: {
 function textToHtml(text: string): string {
   return text
     .split("\n")
-    .map((line) => (line ? `<p>${line}</p>` : "<br/>"))
+    .map((line) => (line ? `<p>${escapeHtml(line)}</p>` : "<br/>"))
     .join("");
 }
 

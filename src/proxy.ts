@@ -1,6 +1,7 @@
 import { jwtVerify } from "jose";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getAuthSecretBytes } from "@/lib/auth-secret";
 import { AUTH_COOKIE_NAME, type UserRole } from "@/lib/auth-types";
 import {
   canUserAccessPath,
@@ -16,12 +17,6 @@ const PUBLIC_PREFIXES = [
   "/api/build-id",
 ];
 
-function getAuthSecret(): Uint8Array {
-  const secret =
-    process.env.AUTH_SECRET?.trim() || "dev-insecure-auth-secret-change-me";
-  return new TextEncoder().encode(secret);
-}
-
 function isPublicPath(pathname: string): boolean {
   return PUBLIC_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(prefix),
@@ -35,7 +30,7 @@ type AuthFromToken = {
 
 async function getAuthFromToken(token: string): Promise<AuthFromToken | null> {
   try {
-    const { payload } = await jwtVerify(token, getAuthSecret());
+    const { payload } = await jwtVerify(token, getAuthSecretBytes());
     const role = payload.role;
     if (role !== "SUPER_ADMIN" && role !== "FORMATEUR" && role !== "ELEVE") {
       return null;

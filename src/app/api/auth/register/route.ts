@@ -9,6 +9,12 @@ import { newId } from "@/lib/id";
 
 export const dynamic = "force-dynamic";
 
+class RegisterConflictError extends Error {
+  constructor() {
+    super("email_conflict");
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as {
@@ -39,54 +45,53 @@ export async function POST(request: Request) {
       );
     }
 
-    const existing = await prisma.user.findUnique({ where: { email } });
-    if (existing) {
-      return NextResponse.json(
-        { error: "Un compte existe déjà avec cet e-mail." },
-        { status: 409 },
-      );
-    }
-
-    const userCount = await prisma.user.count();
-    let role: "SUPER_ADMIN" | "ELEVE" = "ELEVE";
-
-    if (userCount === 0) {
-      role = "SUPER_ADMIN";
-    } else if (body.role === "SUPER_ADMIN") {
-      const setupKey = process.env.SETUP_KEY?.trim();
-      if (!setupKey || body.setupKey !== setupKey) {
-        return NextResponse.json(
-          { error: "Clé d'installation invalide." },
-          { status: 403 },
-        );
-      }
-      role = "SUPER_ADMIN";
-    }
-
     const passwordHash = await hashPassword(password);
-    let studentId: string | null = null;
 
-    if (role === "ELEVE") {
-      studentId = newId();
-      await prisma.student.create({
+    const user = await prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('formation_emargement_bootstrap'))`;
+
+      const existing = await tx.user.findUnique({ where: { email } });
+      if (existing) {
+        throw new RegisterConflictError();
+      }
+
+      const userCount = await tx.user.count();
+      let role: "SUPER_ADMIN" | "ELEVE" = "ELEVE";
+
+      if (userCount === 0) {
+        role = "SUPER_ADMIN";
+      } else if (body.role === "SUPER_ADMIN") {
+        const setupKey = process.env.SETUP_KEY?.trim();
+        if (!setupKey || body.setupKey !== setupKey) {
+          throw new Error("invalid_setup_key");
+        }
+        role = "SUPER_ADMIN";
+      }
+
+      let studentId: string | null = null;
+
+      if (role === "ELEVE") {
+        studentId = newId();
+        await tx.student.create({
+          data: {
+            id: studentId,
+            firstName,
+            lastName,
+            email,
+          },
+        });
+      }
+
+      return tx.user.create({
         data: {
-          id: studentId,
+          email,
+          passwordHash,
           firstName,
           lastName,
-          email,
+          role,
+          studentId,
         },
       });
-    }
-
-    const user = await prisma.user.create({
-      data: {
-        email,
-        passwordHash,
-        firstName,
-        lastName,
-        role,
-        studentId,
-      },
     });
 
     const token = await createAuthSession(user.id);
@@ -105,6 +110,18 @@ export async function POST(request: Request) {
     response.cookies.set(authCookieOptions(token, expiresAt));
     return response;
   } catch (error) {
+    if (error instanceof RegisterConflictError) {
+      return NextResponse.json(
+        { error: "Un compte existe déjà avec cet e-mail." },
+        { status: 409 },
+      );
+    }
+    if (error instanceof Error && error.message === "invalid_setup_key") {
+      return NextResponse.json(
+        { error: "Clé d'installation invalide." },
+        { status: 403 },
+      );
+    }
     console.error("POST /api/auth/register failed:", error);
     return NextResponse.json(
       { error: "Inscription impossible." },

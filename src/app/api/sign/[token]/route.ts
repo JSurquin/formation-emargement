@@ -8,6 +8,9 @@ import type { AttendanceSlot, HalfDay } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
+/** Taille max d'une signature base64 (512 Ko). */
+const MAX_SIGNATURE_DATA_URL_LENGTH = 512 * 1024;
+
 type Params = { params: Promise<{ token: string }> };
 
 function asAttendance(value: unknown): {
@@ -84,6 +87,12 @@ export async function POST(request: Request, { params }: Params) {
     if (!signatureDataUrl?.startsWith("data:image/")) {
       return NextResponse.json(
         { error: "Signature invalide." },
+        { status: 400 },
+      );
+    }
+    if (signatureDataUrl.length > MAX_SIGNATURE_DATA_URL_LENGTH) {
+      return NextResponse.json(
+        { error: "Signature trop volumineuse." },
         { status: 400 },
       );
     }

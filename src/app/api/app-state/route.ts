@@ -1,28 +1,28 @@
 import { NextResponse } from "next/server";
 import { loadAppStateFromDb, saveAppStateToDb } from "@/lib/app-state-db";
+import { filterAppStateForStudent } from "@/lib/app-state-student-filter";
 import { parseAppStateImport } from "@/lib/app-state-io";
 import { getCurrentUser } from "@/lib/auth-session";
 import { canManageSessions } from "@/lib/auth-types";
+import { prisma } from "@/lib/prisma";
 import type { AppState } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-function filterAppStateForStudent(
+async function rejectsMassDeletion(
   state: AppState,
-  studentId: string,
-): AppState {
-  const student = state.students.find((s) => s.id === studentId);
-  const sessions = state.sessions.filter((session) =>
-    session.studentIds.includes(studentId),
-  );
-  return {
-    ...state,
-    students: student ? [student] : [],
-    sessions,
-    noteSnippets: [],
-    sessionTemplates: [],
-    trainingCatalog: [],
-  };
+  role: "SUPER_ADMIN" | "FORMATEUR" | "ELEVE",
+): Promise<boolean> {
+  if (role === "SUPER_ADMIN") return false;
+
+  const [studentCount, sessionCount] = await Promise.all([
+    prisma.student.count(),
+    prisma.trainingSession.count(),
+  ]);
+
+  if (studentCount > 0 && state.students.length === 0) return true;
+  if (sessionCount > 0 && state.sessions.length === 0) return true;
+  return false;
 }
 
 export async function GET() {
@@ -62,6 +62,12 @@ export async function PUT(request: Request) {
       return NextResponse.json(
         { error: "Données invalides." },
         { status: 400 },
+      );
+    }
+    if (await rejectsMassDeletion(state, user.role)) {
+      return NextResponse.json(
+        { error: "Suppression totale des données non autorisée." },
+        { status: 403 },
       );
     }
     await saveAppStateToDb(state);
