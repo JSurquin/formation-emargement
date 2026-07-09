@@ -3,8 +3,8 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { AUTH_COOKIE_NAME, type UserRole } from "@/lib/auth-types";
 import {
+  canUserAccessPath,
   getDefaultHomeForRole,
-  getRequiredRolesForPath,
 } from "@/lib/route-access";
 
 const PUBLIC_PREFIXES = [
@@ -88,23 +88,11 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  const requiredRoles = getRequiredRolesForPath(pathname);
-  if (requiredRoles && !requiredRoles.includes(auth.role)) {
+  if (!canUserAccessPath(auth, pathname)) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "Accès refusé." }, { status: 403 });
     }
     return redirectForRole(auth, request);
-  }
-
-  if (
-    auth.role === "ELEVE" &&
-    auth.studentId &&
-    pathname.startsWith("/eleves/") &&
-    pathname !== `/eleves/${auth.studentId}`
-  ) {
-    return NextResponse.redirect(
-      new URL(`/eleves/${auth.studentId}`, request.url),
-    );
   }
 
   return NextResponse.next();

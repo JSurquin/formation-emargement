@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   canRoleAccessPath,
+  canUserAccessPath,
   getDefaultHomeForRole,
   getNavRoutesForRole,
   getPaletteRoutesForRole,
   getRequiredRolesForPath,
+  resolveLoginDestination,
 } from "@/lib/route-access";
 
 describe("route-access", () => {
@@ -26,6 +28,7 @@ describe("route-access", () => {
 
   it("définit l’accueil par défaut selon le rôle", () => {
     expect(getDefaultHomeForRole("ELEVE", "stu-1")).toBe("/eleves/stu-1");
+    expect(getDefaultHomeForRole("ELEVE")).toBe("/login");
     expect(getDefaultHomeForRole("FORMATEUR")).toBe("/");
     expect(getDefaultHomeForRole("SUPER_ADMIN")).toBe("/");
   });
@@ -46,7 +49,19 @@ describe("route-access", () => {
       "FORMATEUR",
     ]);
     expect(getRequiredRolesForPath("/")).toEqual(["SUPER_ADMIN", "FORMATEUR"]);
-    expect(getRequiredRolesForPath("/eleves/stu-1")).toBeNull();
+    expect(getRequiredRolesForPath("/eleves/stu-1")).toEqual([
+      "ELEVE",
+      "SUPER_ADMIN",
+      "FORMATEUR",
+    ]);
+    expect(getRequiredRolesForPath("/api/sessions/s1/send-emails")).toEqual([
+      "SUPER_ADMIN",
+      "FORMATEUR",
+    ]);
+    expect(getRequiredRolesForPath("/api/funders")).toEqual([
+      "SUPER_ADMIN",
+      "FORMATEUR",
+    ]);
   });
 
   it("valide l’accès par rôle", () => {
@@ -54,6 +69,30 @@ describe("route-access", () => {
     expect(canRoleAccessPath("SUPER_ADMIN", "/planning")).toBe(false);
     expect(canRoleAccessPath("ELEVE", "/")).toBe(false);
     expect(canRoleAccessPath("ELEVE", "/eleves/stu-1")).toBe(true);
+  });
+
+  it("restreint l’élève à son propre espace", () => {
+    const ctx = { role: "ELEVE" as const, studentId: "stu-1" };
+    expect(canUserAccessPath(ctx, "/eleves/stu-1")).toBe(true);
+    expect(canUserAccessPath(ctx, "/eleves/stu-2")).toBe(false);
+    expect(canUserAccessPath(ctx, "/")).toBe(false);
+    expect(canUserAccessPath(ctx, "/api/app-state")).toBe(true);
+    expect(canUserAccessPath({ role: "ELEVE", studentId: null }, "/")).toBe(
+      false,
+    );
+  });
+
+  it("valide la destination après connexion", () => {
+    const trainer = { role: "FORMATEUR" as const, studentId: null };
+    expect(resolveLoginDestination("/admin", trainer)).toBe("/");
+    expect(resolveLoginDestination("//evil.com", trainer)).toBe("/");
+    expect(resolveLoginDestination("/planning", trainer)).toBe("/planning");
+
+    const student = { role: "ELEVE" as const, studentId: "stu-1" };
+    expect(resolveLoginDestination("/eleves/stu-1", student)).toBe(
+      "/eleves/stu-1",
+    );
+    expect(resolveLoginDestination("/admin", student)).toBe("/eleves/stu-1");
   });
 
   it("filtre la palette de commandes", () => {

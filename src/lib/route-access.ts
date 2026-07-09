@@ -195,14 +195,19 @@ export function getDefaultHomeForRole(
   role: UserRole,
   studentId?: string | null,
 ): string {
-  if (role === "ELEVE" && studentId) {
-    return `/eleves/${studentId}`;
+  if (role === "ELEVE") {
+    return studentId ? `/eleves/${studentId}` : "/login";
   }
-  if (role === "SUPER_ADMIN") {
+  if (role === "FORMATEUR") {
     return "/";
   }
   return "/";
 }
+
+export type RouteAccessContext = {
+  role: UserRole;
+  studentId?: string | null;
+};
 
 type PathRule = {
   priority: number;
@@ -228,6 +233,19 @@ const PATH_RULES: PathRule[] = [
     roles: ["FORMATEUR"],
   },
   {
+    priority: 85,
+    test: (p) =>
+      p.startsWith("/api/sessions/") ||
+      p.startsWith("/api/students/") ||
+      p.startsWith("/api/funders"),
+    roles: STAFF_ROLES,
+  },
+  {
+    priority: 55,
+    test: (p) => p.startsWith("/eleves/"),
+    roles: ["ELEVE", ...STAFF_ROLES],
+  },
+  {
     priority: 50,
     test: (p) =>
       p === "/" ||
@@ -249,10 +267,58 @@ export function getRequiredRolesForPath(pathname: string): UserRole[] | null {
   return rule ? [...rule.roles] : null;
 }
 
+function normalizePathname(pathname: string): string {
+  return pathname.split("?")[0].split("#")[0];
+}
+
 export function canRoleAccessPath(role: UserRole, pathname: string): boolean {
-  const required = getRequiredRolesForPath(pathname);
-  if (!required) return true;
+  const required = getRequiredRolesForPath(normalizePathname(pathname));
+  if (!required) return isStaffRole(role);
   return required.includes(role);
+}
+
+/** Contrôle d’accès complet (rôle + périmètre élève sur /eleves/:id). */
+export function canUserAccessPath(
+  ctx: RouteAccessContext,
+  pathname: string,
+): boolean {
+  const path = normalizePathname(pathname);
+
+  if (ctx.role === "ELEVE" && !ctx.studentId) {
+    return false;
+  }
+
+  const required = getRequiredRolesForPath(path);
+  if (required && !required.includes(ctx.role)) {
+    return false;
+  }
+
+  if (ctx.role === "ELEVE") {
+    return (
+      path === `/eleves/${ctx.studentId}` ||
+      path.startsWith("/api/app-state") ||
+      path.startsWith("/api/auth/")
+    );
+  }
+
+  if (!required) {
+    return isStaffRole(ctx.role);
+  }
+
+  return true;
+}
+
+/** Destination sûre après connexion (évite les redirections ouvertes). */
+export function resolveLoginDestination(
+  next: string | null | undefined,
+  ctx: RouteAccessContext,
+): string {
+  const fallback = getDefaultHomeForRole(ctx.role, ctx.studentId);
+  if (!next || next === "/") return fallback;
+  if (!next.startsWith("/") || next.startsWith("//")) return fallback;
+  const pathOnly = normalizePathname(next);
+  if (!canUserAccessPath(ctx, pathOnly)) return fallback;
+  return next;
 }
 
 export function getNavRouteByShortcut(

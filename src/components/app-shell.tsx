@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { ROLE_LABELS } from "@/lib/auth-types";
-import { getDefaultHomeForRole, getNavRoutesForRole } from "@/lib/route-access";
+import { getDefaultHomeForRole, getNavRoutesForRole, canUserAccessPath } from "@/lib/route-access";
 import type { NavRouteId } from "@/lib/route-access";
 import { Button } from "@/components/ui/button";
 import { AppBackground } from "@/components/app-background";
@@ -63,6 +63,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     if (isAuthPage || loading || user) return;
     router.replace(`/login?next=${encodeURIComponent(pathname)}`);
+  }, [isAuthPage, loading, pathname, router, user]);
+
+  React.useEffect(() => {
+    if (isAuthPage || loading || !user) return;
+    if (
+      !canUserAccessPath(
+        { role: user.role, studentId: user.studentId },
+        pathname,
+      )
+    ) {
+      router.replace(getDefaultHomeForRole(user.role, user.studentId));
+    }
   }, [isAuthPage, loading, pathname, router, user]);
 
   React.useEffect(() => {

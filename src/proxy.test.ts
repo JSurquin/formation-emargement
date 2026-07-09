@@ -163,4 +163,21 @@ describe("proxy auth", () => {
       }
     }
   });
+
+  it("bloque les API staff aux élèves", async () => {
+    const cookie = await authCookie("ELEVE", "stu-1");
+    for (const path of [
+      "/api/sessions/s1/send-emails",
+      "/api/students/stu-1/send-reminder",
+      "/api/funders",
+    ]) {
+      const res = await proxy(requestFor(path, cookie));
+      expect(res.status).toBe(403);
+    }
+  });
+
+  it("autorise l’élève sur app-state", async () => {
+    const cookie = await authCookie("ELEVE", "stu-1");
+    expect((await proxy(requestFor("/api/app-state", cookie))).status).toBe(200);
+  });
 });
