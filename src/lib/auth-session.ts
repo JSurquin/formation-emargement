@@ -39,8 +39,6 @@ export async function createAuthSession(userId: string): Promise<string> {
   return new SignJWT({
     sid: session.id,
     uid: userId,
-    role: user.role,
-    ...(user.studentId ? { studentId: user.studentId } : {}),
   })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()

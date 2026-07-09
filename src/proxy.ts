@@ -1,8 +1,7 @@
-import { jwtVerify } from "jose";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getAuthSecretBytes } from "@/lib/auth-secret";
-import { AUTH_COOKIE_NAME, type UserRole } from "@/lib/auth-types";
+import { getAuthUserFromToken, AUTH_COOKIE_NAME } from "@/lib/auth-session";
+import type { UserRole } from "@/lib/auth-types";
 import {
   canUserAccessPath,
   getDefaultHomeForRole,
@@ -23,27 +22,12 @@ function isPublicPath(pathname: string): boolean {
   );
 }
 
-type AuthFromToken = {
+type AuthContext = {
   role: UserRole;
   studentId: string | null;
 };
 
-async function getAuthFromToken(token: string): Promise<AuthFromToken | null> {
-  try {
-    const { payload } = await jwtVerify(token, getAuthSecretBytes());
-    const role = payload.role;
-    if (role !== "SUPER_ADMIN" && role !== "FORMATEUR" && role !== "ELEVE") {
-      return null;
-    }
-    const studentId =
-      typeof payload.studentId === "string" ? payload.studentId : null;
-    return { role, studentId };
-  } catch {
-    return null;
-  }
-}
-
-function redirectForRole(auth: AuthFromToken, request: NextRequest): NextResponse {
+function redirectForRole(auth: AuthContext, request: NextRequest): NextResponse {
   const home = getDefaultHomeForRole(auth.role, auth.studentId);
   return NextResponse.redirect(new URL(home, request.url));
 }
@@ -73,8 +57,8 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  const auth = await getAuthFromToken(token);
-  if (!auth) {
+  const user = await getAuthUserFromToken(token);
+  if (!user) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "Non authentifié." }, { status: 401 });
     }
@@ -83,6 +67,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  const auth: AuthContext = { role: user.role, studentId: user.studentId };
   if (!canUserAccessPath(auth, pathname)) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "Accès refusé." }, { status: 403 });
