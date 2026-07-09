@@ -496,7 +496,7 @@ export function SessionEmargementClient({ sessionId }: { sessionId: string }) {
               >
                 <PenLine className="size-4 shrink-0" />
                 <span className="whitespace-nowrap">
-                  Signer attestations
+                  Signer les attestations
                   {session
                     ? ` (${countSignedAttestations(session)})`
                     : ""}
@@ -550,7 +550,7 @@ export function SessionEmargementClient({ sessionId }: { sessionId: string }) {
               }}
             >
               <ClipboardList className="size-4 shrink-0" />
-              <span className="whitespace-nowrap">Copier résumé</span>
+              <span className="whitespace-nowrap">Copier le résumé</span>
             </Button>
             <Button
               type="button"

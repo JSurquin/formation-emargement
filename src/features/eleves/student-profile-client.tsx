@@ -574,7 +574,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
             ) : null}
           </>
         }
-        description={`Coordonnées, financement, numéro de sécurité sociale (CPF / Héliopée) et justificatifs d'inscription. Présent sur ${sessionCount} feuille${sessionCount > 1 ? "s" : ""}.`}
+        description={`Coordonnées, financement, numéro de sécurité sociale (CPF / Héliopée) et justificatifs d'inscription. Inscrit sur ${sessionCount} feuille${sessionCount > 1 ? "s" : ""} d'émargement.`}
         actions={
           isStudentSpace ? null : (
           <Link
@@ -827,7 +827,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
             </div>
             <p className="text-xs text-muted-foreground sm:col-span-2">
               Ces informations apparaissent sur la convention imprimée. L&apos;e-mail
-              sert aussi aux relances de convention et aux relances documents manquants (financement
+              sert aussi aux relances de convention et aux relances pour documents manquants (financement
               employeur).
             </p>
           </CardContent>
@@ -999,7 +999,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
                 <CheckCircle2 className="size-4" />
                 {isConventionSigned(student, state.students)
                   ? "Convention signée"
-                  : "Marquer convention signée"}
+                  : "Marquer la convention comme signée"}
               </Button>
               {followUp?.upcomingSession ? (
                 <Button
@@ -1149,7 +1149,7 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
                   <Mail className="size-4" />
                   {sendingReminder === "documents"
                     ? "Envoi…"
-                    : "Relancer documents manquants"}
+                    : "Relancer pour documents manquants"}
                 </Button>
                 <Button
                   type="button"

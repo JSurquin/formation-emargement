@@ -140,7 +140,7 @@ export function EmargementBulkActions({
                 const ok = await confirm({
                   title: "Effacer les signatures de l’après-midi ?",
                   description:
-                    "Les présences restent inchangées ; seules les signatures seront effacées.",
+                    "Les cases de présence restent inchangées ; seules les signatures seront effacées.",
                   confirmLabel: "Effacer",
                   variant: "destructive",
                 });
