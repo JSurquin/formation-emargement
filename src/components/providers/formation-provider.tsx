@@ -9,6 +9,8 @@ import {
   type SessionTemplate,
   type Student,
   type SessionStudentAccounting,
+  type SatisfactionAnswer,
+  type SatisfactionResponse,
   type TrainingCatalogEntry,
   type TrainingCatalogDocument,
   type TrainingSession,
@@ -29,6 +31,11 @@ import {
 import type { SessionJsonBundle } from "@/lib/export-session-json";
 import { mergeSessionBundleIntoState } from "@/lib/merge-session-bundle";
 import { mergeAppStates } from "@/lib/merge-app-state";
+import {
+  getSatisfactionQuestions,
+  hasSatisfactionResponse,
+  validateSatisfactionAnswers,
+} from "@/lib/satisfaction";
 
 function normalizeTags(tags: string[] | undefined): string[] | undefined {
   if (!tags?.length) return undefined;
@@ -152,6 +159,11 @@ type FormationContextValue = {
     >,
   ) => void;
   removeTrainingCatalogEntry: (id: string) => void;
+  submitSatisfactionResponse: (input: {
+    studentId: string;
+    sessionId: string;
+    answers: SatisfactionAnswer[];
+  }) => void;
 };
 
 const FormationContext = React.createContext<FormationContextValue | null>(
@@ -868,6 +880,48 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
+  const submitSatisfactionResponse = React.useCallback(
+    (input: {
+      studentId: string;
+      sessionId: string;
+      answers: SatisfactionAnswer[];
+    }) => {
+      setState((s) => {
+        const session = s.sessions.find((x) => x.id === input.sessionId);
+        if (!session?.studentIds.includes(input.studentId)) return s;
+        if (
+          hasSatisfactionResponse(
+            input.studentId,
+            input.sessionId,
+            s.satisfactionResponses,
+          )
+        ) {
+          return s;
+        }
+        const questions = getSatisfactionQuestions(s.satisfactionQuestions);
+        const err = validateSatisfactionAnswers(input.answers, questions);
+        if (err) return s;
+
+        const response: SatisfactionResponse = {
+          id: newId(),
+          studentId: input.studentId,
+          sessionId: input.sessionId,
+          submittedAt: new Date().toISOString(),
+          answers: input.answers,
+        };
+
+        return {
+          ...s,
+          satisfactionResponses: [
+            ...(s.satisfactionResponses ?? []),
+            response,
+          ],
+        };
+      });
+    },
+    [],
+  );
+
   const setPresent = React.useCallback(
     (sessionId: string, studentId: string, half: HalfDay, present: boolean) => {
       setState((s) => ({
@@ -989,6 +1043,11 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
           if (!nextEntry.paymentReceivedAt) delete nextEntry.paymentReceivedAt;
           if (!nextEntry.cpfEntryNotifiedAt) delete nextEntry.cpfEntryNotifiedAt;
           if (!nextEntry.cpfExitNotifiedAt) delete nextEntry.cpfExitNotifiedAt;
+          if (!nextEntry.invoiceNumber?.trim()) delete nextEntry.invoiceNumber;
+          if (nextEntry.amountHt == null || Number.isNaN(nextEntry.amountHt)) {
+            delete nextEntry.amountHt;
+          }
+          if (!nextEntry.invoiceDate) delete nextEntry.invoiceDate;
           if (!nextEntry.notes?.trim()) delete nextEntry.notes;
           const next = { ...(sess.sessionAccounting ?? {}) };
           if (Object.keys(nextEntry).length) {
@@ -1041,6 +1100,7 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
       addTrainingCatalogEntry,
       updateTrainingCatalogEntry,
       removeTrainingCatalogEntry,
+      submitSatisfactionResponse,
     }),
     [
       state,
@@ -1075,6 +1135,7 @@ export function FormationProvider({ children }: { children: React.ReactNode }) {
       addTrainingCatalogEntry,
       updateTrainingCatalogEntry,
       removeTrainingCatalogEntry,
+      submitSatisfactionResponse,
     ],
   );
 

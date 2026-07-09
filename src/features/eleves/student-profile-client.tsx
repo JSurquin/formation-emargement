@@ -87,6 +87,7 @@ import { TrainingAttestationPrint } from "@/components/training-attestation-prin
 import { formatSiret } from "@/lib/convention-print";
 import type { Funder } from "@/lib/funder";
 import type { StudentDocument } from "@/lib/types";
+import { SatisfactionForm } from "@/features/satisfaction/satisfaction-form";
 
 const DOCUMENT_PRESETS = [
   { value: "identity", label: "Carte d'identité / passeport" },
@@ -649,6 +650,8 @@ export function StudentProfileClient({ studentId }: { studentId: string }) {
           </CardContent>
         </Card>
       ) : null}
+
+      {isStudentSpace ? <SatisfactionForm studentId={studentId} /> : null}
 
       <form onSubmit={onSave} className="space-y-8">
         <Card className="dg-surface ring-0">

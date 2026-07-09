@@ -36,6 +36,15 @@ describe("route-access", () => {
       "SUPER_ADMIN",
     ]);
     expect(getRequiredRolesForPath("/planning")).toEqual(["FORMATEUR"]);
+    expect(getRequiredRolesForPath("/facturation")).toEqual(["SUPER_ADMIN"]);
+    expect(getRequiredRolesForPath("/calendrier")).toEqual([
+      "SUPER_ADMIN",
+      "FORMATEUR",
+    ]);
+    expect(getRequiredRolesForPath("/satisfaction")).toEqual([
+      "SUPER_ADMIN",
+      "FORMATEUR",
+    ]);
     expect(getRequiredRolesForPath("/")).toEqual(["SUPER_ADMIN", "FORMATEUR"]);
     expect(getRequiredRolesForPath("/eleves/stu-1")).toBeNull();
   });

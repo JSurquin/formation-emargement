@@ -20,11 +20,42 @@ export type AttestationSignature = {
 export type SessionStudentAccounting = {
   invoiceSentAt?: string;
   paymentReceivedAt?: string;
+  /** Numéro de facture (suivi complet). */
+  invoiceNumber?: string;
+  /** Montant HT facturé (€). */
+  amountHt?: number;
+  /** Date d’émission de la facture (YYYY-MM-DD). */
+  invoiceDate?: string;
   /** Déclaration d’entrée en formation sur Mon Compte Formation. */
   cpfEntryNotifiedAt?: string;
   /** Déclaration de sortie en formation sur Mon Compte Formation. */
   cpfExitNotifiedAt?: string;
   notes?: string;
+};
+
+export type SatisfactionQuestionKind = "rating" | "yes_no" | "text";
+
+/** Question d’enquête de satisfaction (Qualiopi). */
+export type SatisfactionQuestion = {
+  id: string;
+  label: string;
+  kind: SatisfactionQuestionKind;
+  /** Pour kind rating : échelle 1–maxRating. */
+  maxRating?: number;
+};
+
+export type SatisfactionAnswer = {
+  questionId: string;
+  value: number | boolean | string;
+};
+
+/** Réponse stagiaire à l’enquête de satisfaction (par session). */
+export type SatisfactionResponse = {
+  id: string;
+  studentId: string;
+  sessionId: string;
+  submittedAt: string;
+  answers: SatisfactionAnswer[];
 };
 
 /** Document administratif pour le formateur (ordre de mission, etc.). */
@@ -183,6 +214,10 @@ export type AppState = {
   sessionTemplates?: SessionTemplate[];
   /** Annuaire des formations (programmes, pièces pour financeurs). */
   trainingCatalog?: TrainingCatalogEntry[];
+  /** Réponses aux enquêtes de satisfaction. */
+  satisfactionResponses?: SatisfactionResponse[];
+  /** Questions personnalisées ; défaut via DEFAULT_SATISFACTION_QUESTIONS. */
+  satisfactionQuestions?: SatisfactionQuestion[];
 };
 
 export function emptySlot(): AttendanceSlot {

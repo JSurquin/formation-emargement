@@ -1,6 +1,6 @@
 import type { AppState } from "./types";
 
-export const APP_STATE_SCHEMA_VERSION = 11;
+export const APP_STATE_SCHEMA_VERSION = 12;
 
 /**
  * Normalise un état chargé (localStorage ou import) vers le schéma courant.
@@ -106,6 +106,36 @@ export function migrateAppState(state: AppState): AppState {
         trainingLevel: s.trainingLevel || undefined,
         trainingPositioningNotes:
           s.trainingPositioningNotes?.trim() || undefined,
+      })),
+    };
+  }
+  if (v < 12) {
+    next = {
+      ...next,
+      satisfactionResponses: next.satisfactionResponses?.length
+        ? next.satisfactionResponses
+        : undefined,
+      satisfactionQuestions: next.satisfactionQuestions?.length
+        ? next.satisfactionQuestions
+        : undefined,
+      sessions: next.sessions.map((sess) => ({
+        ...sess,
+        sessionAccounting: sess.sessionAccounting
+          ? Object.fromEntries(
+              Object.entries(sess.sessionAccounting).map(([id, acc]) => [
+                id,
+                {
+                  ...acc,
+                  invoiceNumber: acc.invoiceNumber?.trim() || undefined,
+                  amountHt:
+                    acc.amountHt != null && !Number.isNaN(acc.amountHt)
+                      ? acc.amountHt
+                      : undefined,
+                  invoiceDate: acc.invoiceDate || undefined,
+                },
+              ]),
+            )
+          : undefined,
       })),
     };
   }

@@ -8,7 +8,10 @@ export type NavRouteId =
   | "formations"
   | "conventions"
   | "stats"
+  | "satisfaction"
+  | "calendar"
   | "planning"
+  | "billing"
   | "admin"
   | "student-space";
 
@@ -81,12 +84,38 @@ export const NAV_ROUTES: NavRouteDef[] = [
     palette: true,
   },
   {
+    id: "satisfaction",
+    href: "/satisfaction",
+    label: "Satisfaction",
+    roles: STAFF_ROLES,
+    order: 52,
+    palette: true,
+  },
+  {
+    id: "calendar",
+    href: "/calendrier",
+    label: "Calendrier",
+    roles: STAFF_ROLES,
+    order: 54,
+    shortcut: "g",
+    palette: true,
+  },
+  {
     id: "planning",
     href: "/planning",
     label: "Planning",
     roles: ["FORMATEUR"],
     order: 60,
     shortcut: "p",
+    palette: true,
+  },
+  {
+    id: "billing",
+    href: "/facturation",
+    label: "Facturation",
+    roles: ["SUPER_ADMIN"],
+    order: 65,
+    shortcut: "b",
     palette: true,
   },
   {
@@ -152,7 +181,13 @@ export function getPaletteRoutesForRole(
               ? "Conventions"
               : route.id === "stats"
                 ? "Statistiques"
-                : route.label,
+                : route.id === "satisfaction"
+                  ? "Enquêtes satisfaction"
+                  : route.id === "calendar"
+                    ? "Calendrier global"
+                    : route.id === "billing"
+                      ? "Facturation & financeurs"
+                      : route.label,
   }));
 }
 
@@ -183,6 +218,11 @@ const PATH_RULES: PathRule[] = [
     roles: ["SUPER_ADMIN"],
   },
   {
+    priority: 95,
+    test: (p) => p.startsWith("/facturation"),
+    roles: ["SUPER_ADMIN"],
+  },
+  {
     priority: 90,
     test: (p) => p.startsWith("/planning") || p.startsWith("/api/trainer/"),
     roles: ["FORMATEUR"],
@@ -195,6 +235,8 @@ const PATH_RULES: PathRule[] = [
       p.startsWith("/formations") ||
       p.startsWith("/conventions") ||
       p.startsWith("/statistiques") ||
+      p.startsWith("/satisfaction") ||
+      p.startsWith("/calendrier") ||
       p.startsWith("/sessions/"),
     roles: STAFF_ROLES,
   },

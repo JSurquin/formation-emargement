@@ -4,12 +4,15 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import {
   BarChart3,
+  Banknote,
   BookOpen,
   CalendarDays,
+  CalendarRange,
   FileText,
   GraduationCap,
   LayoutDashboard,
   Shield,
+  Star,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -35,7 +38,10 @@ const PALETTE_ICONS: Record<string, LucideIcon> = {
   "/formations": BookOpen,
   "/conventions": FileText,
   "/statistiques": BarChart3,
+  "/satisfaction": Star,
+  "/calendrier": CalendarRange,
   "/planning": CalendarDays,
+  "/facturation": Banknote,
   "/admin": Shield,
 };
 

@@ -141,4 +141,26 @@ describe("proxy auth", () => {
     expect(blockedAdmin.status).toBe(307);
     expect(blockedAdmin.headers.get("location")).toContain("/");
   });
+
+  it("réserve la facturation au super administrateur", async () => {
+    const adminCookie = await authCookie("SUPER_ADMIN");
+    const trainerCookie = await authCookie("FORMATEUR");
+
+    expect((await proxy(requestFor("/facturation", adminCookie))).status).toBe(
+      200,
+    );
+
+    const blocked = await proxy(requestFor("/facturation", trainerCookie));
+    expect(blocked.status).toBe(307);
+    expect(blocked.headers.get("location")).toContain("/");
+  });
+
+  it("autorise le staff sur calendrier et satisfaction", async () => {
+    for (const role of ["SUPER_ADMIN", "FORMATEUR"] as const) {
+      const cookie = await authCookie(role);
+      for (const path of ["/calendrier", "/satisfaction"]) {
+        expect((await proxy(requestFor(path, cookie))).status).toBe(200);
+      }
+    }
+  });
 });

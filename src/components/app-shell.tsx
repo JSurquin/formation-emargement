@@ -5,14 +5,17 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   BarChart3,
+  Banknote,
   BookOpen,
   CalendarDays,
+  CalendarRange,
   FileText,
   GraduationCap,
   IdCard,
   LayoutDashboard,
   LogOut,
   Shield,
+  Star,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -36,7 +39,10 @@ const NAV_ICONS: Record<NavRouteId, LucideIcon> = {
   formations: BookOpen,
   conventions: FileText,
   stats: BarChart3,
+  satisfaction: Star,
+  calendar: CalendarRange,
   planning: CalendarDays,
+  billing: Banknote,
   admin: Shield,
 };
 
